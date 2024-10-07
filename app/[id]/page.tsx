@@ -15,6 +15,7 @@ export default function PostDetail() {
   const [comments, setComments] = useState<string[]>([]);
   const [showLikes, setShowLikes] = useState<boolean>(false);
   const [showComments, setShowComments] = useState<boolean>(false);
+  const [authorAvatar, setAuthorAvatar] = useState<string>("");
 
   useEffect(() => {
     if (id) {
@@ -27,6 +28,21 @@ export default function PostDetail() {
           setPost({ id: docSnap.id, ...postData });
           setLikes(postData.likes || []);
           setComments(postData.comments || []);
+
+          // Fetch author avatar from users collection
+          if (postData.author) {
+            const userRef = doc(db, "users", postData.author)
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) {
+              const userData = userSnap.data();
+
+              setAuthorAvatar(userData.image || "/avatar.png");
+            } else {
+              console.log(userSnap.data());
+              
+              setAuthorAvatar("/avatar.png");
+            }
+          }
         } else {
           console.log("No such document!");
         }
@@ -39,7 +55,7 @@ export default function PostDetail() {
   const handleLike = async () => {
     if (!post) return;
 
-    const currentUser = "user@example.com"; 
+    const currentUser = "user@example.com"; // Replace with actual user
 
     if (!likes.includes(currentUser)) {
       const postRef = doc(db, "posts", id as string);
@@ -83,7 +99,7 @@ export default function PostDetail() {
           {/* Post Header */}
           <div className="flex items-center p-6 bg-indigo-50">
             <img
-              src="/avatar.png"
+              src={authorAvatar} // Use fetched author avatar or fallback
               alt="Author Avatar"
               className="h-12 w-12 rounded-full object-cover border-2 border-indigo-400"
             />

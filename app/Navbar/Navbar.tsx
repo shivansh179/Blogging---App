@@ -46,7 +46,7 @@ export default function Navbar() {
           />
           <Link href="/">
             <div className="text-lg font-bold hover:text-blue-200 transition-colors duration-200">
-              Brand
+              UniFy
             </div>
           </Link>
         </div>
