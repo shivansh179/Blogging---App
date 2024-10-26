@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { db } from "../../firebase";
-import { collection, query, onSnapshot } from "firebase/firestore";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Link from "next/link";
 import Navbar from "../Navbar/Navbar";
 import RouteGuard from "@/Components/RouteGuard";
@@ -10,31 +11,61 @@ import RouteGuard from "@/Components/RouteGuard";
 export default function Feed() {
   const [posts, setPosts] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [followedAuthors, setFollowedAuthors] = useState<string[]>([]);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetching posts
-    const qPosts = query(collection(db, "posts"));
-    const unsubscribePosts = onSnapshot(qPosts, (snapshot) => {
-      setPosts(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+    // Get the logged-in user's email
+    const auth = getAuth();
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUserEmail(user.email);
+        fetchFollowedAuthors(user.email); // Fetch authors the user follows
+      } else {
+        setUserEmail(null);
+        setFollowedAuthors([]); // Clear followed authors if logged out
+      }
     });
 
-    // Fetching users
-    const qUsers = query(collection(db, "users"));
-    const unsubscribeUsers = onSnapshot(qUsers, (snapshot) => {
-      setUsers(snapshot.docs.map((doc) => ({ email: doc.data().email, image: doc.data().image })));
-    });
-
-    return () => {
-      unsubscribePosts();
-      unsubscribeUsers();
-    };
+    return () => unsubscribeAuth();
   }, []);
+
+  // Fetch authors that the logged-in user follows
+  const fetchFollowedAuthors = async (email: string) => {
+    const qFollow = query(collection(db, "follow"), where("followedBy", "==", email));
+    onSnapshot(qFollow, (snapshot) => {
+      const followed: string[] = [];
+      snapshot.forEach((doc) => {
+        followed.push(doc.data().author); // Collect authors the user follows
+      });
+      setFollowedAuthors(followed);
+    });
+  };
+
+  useEffect(() => {
+    if (followedAuthors.length > 0) {
+      // Fetch posts only from followed authors
+      const qPosts = query(collection(db, "posts"), where("author", "in", followedAuthors));
+      const unsubscribePosts = onSnapshot(qPosts, (snapshot) => {
+        setPosts(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      });
+
+      // Fetching users to get author avatars
+      const qUsers = query(collection(db, "users"));
+      const unsubscribeUsers = onSnapshot(qUsers, (snapshot) => {
+        setUsers(snapshot.docs.map((doc) => ({ email: doc.data().email, image: doc.data().image })));
+      });
+
+      return () => {
+        unsubscribePosts();
+        unsubscribeUsers();
+      };
+    }
+  }, [followedAuthors]);
 
   // Helper function to get the avatar of the author from the users collection
   const getUserAvatar = (email: string) => {
     const user = users.find((user) => user.email === email);
-    
-    console.log(user);
     return user ? user.image : "/avatar.png"; // Default avatar if user not found
   };
 
@@ -47,6 +78,10 @@ export default function Feed() {
             <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">
               Blog Feed
             </h1>
+
+            {posts.length === 0 && (
+              <p className="text-center text-gray-500">No posts available from authors you follow.</p>
+            )}
 
             {posts.map((post) => (
               <div

@@ -42,10 +42,10 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         {/* Logo Section */}
         <div className="flex items-center space-x-4">
-          <FiMenu
+          {/* <FiMenu
             className="h-8 w-8 cursor-pointer md:hidden"
             onClick={() => setMenuOpen(!menuOpen)} // Toggle menu on mobile
-          />
+          /> */}
           <Link href="/">
             <div className="text-lg font-bold hover:text-blue-200 transition-colors duration-200">
               UniFy
@@ -70,6 +70,12 @@ export default function Navbar() {
             <div className="text-lg font-semibold hover:text-blue-200 transition-colors duration-200 flex items-center">
               <FiPlusCircle className="mr-1" />
               Create Post
+            </div>
+          </Link>
+          <Link href="/Follow">
+            <div className="text-lg font-semibold hover:text-blue-200 transition-colors duration-200 flex items-center">
+              <FiPlusCircle className="mr-1" />
+              Follow
             </div>
           </Link>
         </div>
@@ -107,6 +113,11 @@ export default function Navbar() {
               <Link href="/CreatePost">
                 <div className="px-4 py-2 hover:bg-gray-200 cursor-pointer">
                   Create Post
+                </div>
+              </Link>
+              <Link href="/CreatePost">
+                <div className="px-4 py-2 hover:bg-gray-200 cursor-pointer">
+                  Follow
                 </div>
               </Link>
               <Link href="/Profiles">

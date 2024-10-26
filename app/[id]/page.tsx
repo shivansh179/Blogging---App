@@ -29,17 +29,21 @@ export default function PostDetail() {
           setLikes(postData.likes || []);
           setComments(postData.comments || []);
 
-          // Fetch author avatar from users collection
+          // Fetch author avatar from users collection using email
           if (postData.author) {
-            const userRef = doc(db, "users", postData.author)
-            const userSnap = await getDoc(userRef);
+            const usersQuery = doc(db, "users", postData.email); // Assuming postData.author is the email
+            
+            console.log("avalable ",usersQuery);
+            const userSnap = await getDoc(usersQuery);
             if (userSnap.exists()) {
               const userData = userSnap.data();
 
+              console.log("Image is avalable ",userData.image);
+              
               setAuthorAvatar(userData.image || "/avatar.png");
             } else {
-              console.log(userSnap.data());
-              
+              console.log("Image is not avalable ");
+              // console.log(userSnap.data());
               setAuthorAvatar("/avatar.png");
             }
           }
@@ -133,21 +137,24 @@ export default function PostDetail() {
               onClick={handleLike}
             >
               <FaHeart className="h-6 w-6" />
-              <span>{likes.length} Likes</span>
+              <span className="hidden md:inline">{likes.length} Likes</span> {/* Hide text on mobile */}
+              <span className="md:hidden">{likes.length}</span> {/* Show only number on mobile */}
             </button>
             <button
               className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors"
               onClick={() => setShowComments(!showComments)}
             >
               <FaComment className="h-6 w-6" />
-              <span>{comments.length} Comments</span>
+              <span className="hidden md:inline">{comments.length} Comments</span> {/* Hide text on mobile */}
+              <span className="md:hidden">{comments.length}</span> {/* Show only number on mobile */}
             </button>
             <button
               className="flex items-center space-x-2 text-blue-500 hover:text-blue-600 transition-colors"
               onClick={handleShare}
             >
               <FaShareAlt className="h-6 w-6" />
-              <span>Share</span>
+              <span className="hidden md:inline">Share</span> {/* Hide text on mobile */}
+              <span className="md:hidden">🔗</span> {/* Optional: Show a different icon or nothing on mobile */}
             </button>
           </div>
 
@@ -166,7 +173,7 @@ export default function PostDetail() {
           {/* Comment Section */}
           {showComments && (
             <div className="p-4 bg-gray-100">
-              <h3 className="text-xl font-semibold mb-4">Comments:</h3>
+              <h3 className="hidden text-xl font-semibold mb-4">Comments:</h3>
               <ul className="space-y-4 mb-4">
                 {comments.map((comment, index) => (
                   <li key={index} className="border-b pb-2">{comment}</li>
