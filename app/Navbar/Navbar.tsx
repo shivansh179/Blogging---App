@@ -1,19 +1,20 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { AppBar, Toolbar, IconButton, Menu, MenuItem, Typography, Avatar, Button, Drawer, List, ListItem, ListItemText } from '@mui/material';
+import { Menu as MenuIcon } from '@mui/icons-material';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { auth, db } from '../../firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDocs, query, where, collection } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import admin from "../../admin.json";
-import { FiMenu, FiSearch, FiPlusCircle, FiUser } from 'react-icons/fi'; // Icons
 
 export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false); // Dropdown state for profile menu
-  const [menuOpen, setMenuOpen] = useState(false); // Dropdown state for mobile menu
+  const [dropdownAnchor, setDropdownAnchor] = useState<null | HTMLElement>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [adminRights, setAdminRights] = useState(false);
 
   const router = useRouter();
@@ -28,13 +29,12 @@ export default function Navbar() {
           const userData = querySnapshot.docs[0].data();
           setProfileImage(userData.image || '/avatar.png');
         }
-        // Check if the user email exists in the admin email list
         if (admin.email.includes(user.email)) {
           setAdminRights(true);
         }
       } else {
         setUser(null);
-        setAdminRights(false); // Reset admin rights on sign out
+        setAdminRights(false);
       }
     });
     return () => unsubscribe();
@@ -45,107 +45,124 @@ export default function Navbar() {
     router.push('/Auth');
   };
 
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setDropdownAnchor(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setDropdownAnchor(null);
+  };
+
+  const toggleDrawer = (open: boolean) => {
+    setDrawerOpen(open);
+  };
+
   return (
-    <nav className="p-4 shadow-lg bg-indigo-600 text-white shadow-white">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        {/* Logo Section */}
-        <div className="flex items-center space-x-4">
-          <Link href="/">
-            <div className="text-lg font-bold hover:text-blue-200 transition-colors duration-200">
-              UniFy
-            </div>
+    <AppBar position="static" color="default">
+      <Toolbar>
+        <IconButton edge="start" color="inherit" onClick={() => toggleDrawer(true)} sx={{ display: { md: 'none' } }}>
+          <MenuIcon />
+        </IconButton>
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          UniFy
+        </Typography>
+        
+        <div className="hidden md:flex items-center space-x-4">
+          <Link href="/Feed" passHref>
+            <Button color="inherit">Feed</Button>
+          </Link>
+          <Link href="/SearchUser" passHref>
+            <Button color="inherit">Search Users</Button>
+          </Link>
+          <Link href="/CreatePost" passHref>
+            <Button color="inherit">Create Post</Button>
+          </Link>
+          <Link href="/Follow" passHref>
+            <Button color="inherit">Follow</Button>
           </Link>
         </div>
 
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center space-x-6">
-          <Link href="/Feed">
-            <div className="text-lg font-semibold hover:text-blue-200 transition-colors duration-200">
-              Feed
-            </div>
-          </Link>
-          <Link href="/SearchUser">
-            <div className="text-lg font-semibold hover:text-blue-200 transition-colors duration-200 flex items-center">
-              <FiSearch className="mr-1" />
-              Search Users
-            </div>
-          </Link>
-          <Link href="/CreatePost">
-            <div className="text-lg font-semibold hover:text-blue-200 transition-colors duration-200 flex items-center">
-              <FiPlusCircle className="mr-1" />
-              Create Post
-            </div>
-          </Link>
-          <Link href="/Follow">
-            <div className="text-lg font-semibold hover:text-blue-200 transition-colors duration-200 flex items-center">
-              <FiPlusCircle className="mr-1" />
-              Follow
-            </div>
-          </Link>
-        </div>
-
-        {/* Profile Section */}
-        <div className="relative">
-          {user ? (
-            <img
-              src={profileImage || '/avatar.png'}
-              alt="Profile"
-              className="h-10 w-10 rounded-full cursor-pointer hover:opacity-80"
-              onClick={() => setDropdownOpen(!dropdownOpen)} // Toggle dropdown
-            />
-          ) : (
-            <Link href="/Auth">
-              <div className="text-lg font-semibold hover:text-blue-200 transition-colors duration-200">
-                Login
-              </div>
-            </Link>
-          )}
-
-          {/* Dropdown for Profile Menu */}
-          {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded-lg shadow-lg z-50">
-              <Link href="/Feed">
-                <div className="px-4 py-2 hover:bg-gray-200 cursor-pointer">
-                  Feed
-                </div>
-              </Link>
-              <Link href="/SearchUser">
-                <div className="px-4 py-2 hover:bg-gray-200 cursor-pointer">
-                  Search Users
-                </div>
-              </Link>
-              <Link href="/CreatePost">
-                <div className="px-4 py-2 hover:bg-gray-200 cursor-pointer">
-                  Create Post
-                </div>
-              </Link>
-              <Link href="/Follow">
-                <div className="px-4 py-2 hover:bg-gray-200 cursor-pointer">
-                  Follow
-                </div>
-              </Link>
-              <Link href="/Profiles">
-                <div className="px-4 py-2 hover:bg-gray-200 cursor-pointer">
-                  Profile
-                </div>
+        {user ? (
+          <>
+            <IconButton onClick={handleMenuOpen} color="inherit">
+              <Avatar src={profileImage || '/avatar.png'} />
+            </IconButton>
+            <Menu
+              anchorEl={dropdownAnchor}
+              open={Boolean(dropdownAnchor)}
+              onClose={handleMenuClose}
+            >
+              <Link href="/Profiles" passHref>
+                <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
               </Link>
               {adminRights && (
-                <Link href="/Admin">
-                  <div className="px-4 py-2 hover:bg-gray-200 cursor-pointer">
-                    Admin
-                  </div>
+                <Link href="/Admin" passHref>
+                  <MenuItem onClick={handleMenuClose}>Admin</MenuItem>
                 </Link>
               )}
-              <div
-                onClick={handleLogout}
-                className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-              >
-                Logout
-              </div>
-            </div>
+              <MenuItem onClick={handleLogout}>Logout</MenuItem>
+            </Menu>
+          </>
+        ) : (
+          <Link href="/Auth" passHref>
+            <Button color="inherit">Login</Button>
+          </Link>
+        )}
+      </Toolbar>
+
+      {/* Mobile Drawer */}
+      <Drawer anchor="left" open={drawerOpen} onClose={() => toggleDrawer(false)}>
+        <List sx={{ width: 250 }}>
+          <ListItem button onClick={() => toggleDrawer(false)}>
+            <ListItemText primary="UniFy" />
+          </ListItem>
+          <Link href="/Feed" passHref>
+            <ListItem button onClick={() => toggleDrawer(false)}>
+              <ListItemText primary="Feed" />
+            </ListItem>
+          </Link>
+          <Link href="/SearchUser" passHref>
+            <ListItem button onClick={() => toggleDrawer(false)}>
+              <ListItemText primary="Search Users" />
+            </ListItem>
+          </Link>
+          <Link href="/CreatePost" passHref>
+            <ListItem button onClick={() => toggleDrawer(false)}>
+              <ListItemText primary="Create Post" />
+            </ListItem>
+          </Link>
+          <Link href="/Follow" passHref>
+            <ListItem button onClick={() => toggleDrawer(false)}>
+              <ListItemText primary="Follow" />
+            </ListItem>
+          </Link>
+          {user && (
+            <Link href="/Profiles" passHref>
+              <ListItem button onClick={() => toggleDrawer(false)}>
+                <ListItemText primary="Profile" />
+              </ListItem>
+            </Link>
           )}
-        </div>
-      </div>
-    </nav>
+          {adminRights && (
+            <Link href="/Admin" passHref>
+              <ListItem button onClick={() => toggleDrawer(false)}>
+                <ListItemText primary="Admin" />
+              </ListItem>
+            </Link>
+          )}
+          {user ? (
+            <ListItem button onClick={() => { handleLogout(); toggleDrawer(false); }}>
+              <ListItemText primary="Logout" />
+            </ListItem>
+          ) : (
+            <Link href="/Auth" passHref>
+              <ListItem button onClick={() => toggleDrawer(false)}>
+                <ListItemText primary="Login" />
+              </ListItem>
+            </Link>
+          )}
+        </List>
+      </Drawer>
+    </AppBar>
   );
 }
