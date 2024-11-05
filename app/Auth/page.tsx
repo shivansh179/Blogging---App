@@ -48,7 +48,7 @@ export default function Auth() {
 
   return (
     <div
-      className="flex items-center justify-center h-screen bg-cover bg-center"
+      className="flex items-center justify-center h-screen bg-cover bg-center p-4"
       style={{ backgroundImage: "url('/blog.jpg')" }} // Cloud image
     >
       <div className="bg-white bg-opacity-80 backdrop-blur-sm backdrop-filter rounded-lg shadow-lg p-8 max-w-md w-full border border-gray-200">

@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, query, where, getDocs, addDoc, deleteDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
 import { db } from "@/firebase";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "../Navbar/Navbar";
@@ -15,7 +23,6 @@ const SearchPage: React.FC = () => {
   const [followedAuthors, setFollowedAuthors] = useState<string[]>([]); // List of followed authors
   const [followedDocs, setFollowedDocs] = useState<{ [author: string]: string }>({}); // Store author and follow document ID
 
-
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -28,7 +35,6 @@ const SearchPage: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  
   const fetchSuggestions = async () => {
     if (searchTerm.trim() === "") {
       setSuggestions([]);
@@ -125,44 +131,50 @@ const SearchPage: React.FC = () => {
   return (
     <>
       <Navbar />
-      <div className="p-8 bg-gray-50 min-h-screen">
-        <div className="max-w-5xl mx-auto bg-white p-6 shadow-lg rounded-lg">
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-6">Search Authors</h1>
+      <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+        <div className="max-w-5xl mx-auto bg-white p-4 sm:p-6 shadow-lg rounded-lg">
+          <h1 className="text-2xl sm:text-4xl font-extrabold text-gray-900 mb-4 sm:mb-6">
+            Search Authors
+          </h1>
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by author"
-            className="border border-gray-300 p-3 rounded-lg w-full mb-6 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
+            className="border border-gray-300 p-2 sm:p-3 rounded-lg w-full mb-4 sm:mb-6 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
           />
 
           {loading && <p className="text-indigo-500">Loading...</p>}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-8 mt-4 sm:mt-6">
             {/* Search Suggestions Section */}
-            <div className="bg-indigo-50 p-5 rounded-lg shadow-md">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Search Results</h2>
-              <ul className="list-none space-y-4">
+            <div className="bg-indigo-50 p-4 sm:p-5 rounded-lg shadow-md">
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">
+                Search Results
+              </h2>
+              <ul className="list-none space-y-3 sm:space-y-4">
                 {suggestions.map((suggestion) => (
                   <li
                     key={suggestion.id}
-                    className="flex justify-between items-center p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                    className="flex justify-between items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
                   >
-                    <span className="text-gray-700 text-lg font-medium">{suggestion.author}</span>
+                    <span className="text-gray-700 text-lg font-medium">
+                      {suggestion.author}
+                    </span>
                     {followedAuthors.includes(suggestion.author) ? (
                       <button
                         onClick={() => handleUnfollow(suggestion.author)}
-                        className="bg-red-600 text-white py-1 px-4 rounded-lg hover:bg-red-700 transition-all flex items-center"
+                        className="bg-red-600 text-white py-1 px-2 sm:py-1 sm:px-4 rounded-lg hover:bg-red-700 transition-all flex items-center"
                       >
-                        <FaUserMinus className="mr-2" />
+                        <FaUserMinus className="mr-1 sm:mr-2" />
                         Unfollow
                       </button>
                     ) : (
                       <button
                         onClick={() => handleFollow(suggestion.author)}
-                        className="bg-indigo-600 text-white py-1 px-4 rounded-lg hover:bg-indigo-700 transition-all flex items-center"
+                        className="bg-indigo-600 text-white py-1 px-2 sm:py-1 sm:px-4 rounded-lg hover:bg-indigo-700 transition-all flex items-center"
                       >
-                        <FaUserPlus className="mr-2" />
+                        <FaUserPlus className="mr-1 sm:mr-2" />
                         + Follow
                       </button>
                     )}
@@ -172,21 +184,25 @@ const SearchPage: React.FC = () => {
             </div>
 
             {/* Followed Authors Section */}
-            <div className="bg-indigo-50 p-5 rounded-lg shadow-md">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Authors You Follow</h2>
-              <ul className="list-none space-y-4">
+            <div className="bg-indigo-50 p-4 sm:p-5 rounded-lg shadow-md">
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">
+                Authors You Follow
+              </h2>
+              <ul className="list-none space-y-3 sm:space-y-4">
                 {followedAuthors.length > 0 ? (
                   followedAuthors.map((author, index) => (
                     <li
                       key={index}
-                      className="flex justify-between items-center p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                      className="flex justify-between items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
                     >
-                      <span className="text-gray-700 text-lg font-medium">{author}</span>
+                      <span className="text-gray-700 text-lg font-medium">
+                        {author}
+                      </span>
                       <button
                         onClick={() => handleUnfollow(author)}
-                        className="bg-red-600 text-white py-1 px-4 rounded-lg hover:bg-red-700 transition-all flex items-center"
+                        className="bg-red-600 text-white py-1 px-2 sm:py-1 sm:px-4 rounded-lg hover:bg-red-700 transition-all flex items-center"
                       >
-                        <FaUserMinus className="mr-2" />
+                        <FaUserMinus className="mr-1 sm:mr-2" />
                         Unfollow
                       </button>
                     </li>
