@@ -6,13 +6,17 @@ import { auth, db } from '../../firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDocs, query, where, collection } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import admin from "../../admin.json";
 import { FiMenu, FiSearch, FiPlusCircle, FiUser } from 'react-icons/fi'; // Icons
+
 
 export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false); // Dropdown state for profile menu
   const [menuOpen, setMenuOpen] = useState(false); // Dropdown state for mobile menu
+  const [admin, setAdmin] = useState(false);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -24,6 +28,9 @@ export default function Navbar() {
         if (!querySnapshot.empty) {
           const userData = querySnapshot.docs[0].data();
           setProfileImage(userData.image || '/avatar.png');
+        }
+        if (user.email?.includes(admin.email)) {
+          setAdmin(true);
         }
       } else {
         setUser(null);
@@ -38,7 +45,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="p-4 bg-gradient-to-r from-pink-500 to-indigo-600 text-white shadow-md">
+    <nav className="p-4 shadow-lg bg-indigo-600 text-white shadow-white">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         {/* Logo Section */}
         <div className="flex items-center space-x-4">
@@ -125,6 +132,14 @@ export default function Navbar() {
                   Profile
                 </div>
               </Link>
+              {admin ?
+                (
+                  <Link href="/Admin">
+                    <div className="px-4 py-2 hover:bg-gray-200 cursor-pointer">
+                      Admin
+                    </div>
+                  </Link>
+                ) : (null)}
               <div
                 onClick={handleLogout}
                 className="px-4 py-2 hover:bg-gray-200 cursor-pointer"

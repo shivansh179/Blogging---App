@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { db } from "../../firebase";
-import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
+import { doc, getDoc, updateDoc, arrayUnion, setDoc } from "firebase/firestore";
 import Navbar from "../Navbar/Navbar";
 import { FaHeart, FaComment, FaShareAlt } from "react-icons/fa";
 
@@ -30,21 +30,27 @@ export default function PostDetail() {
           setComments(postData.comments || []);
 
           // Fetch author avatar from users collection using email
-          if (postData.author) {
-            const usersQuery = doc(db, "users", postData.email); // Assuming postData.author is the email
+          if (postData.email) {
+            const userRef = doc(db, "users", postData.email);
             
-            console.log("avalable ",usersQuery);
-            const userSnap = await getDoc(usersQuery);
-            if (userSnap.exists()) {
-              const userData = userSnap.data();
+            try {
+              const userSnap = await getDoc(userRef);
+              console.log(userSnap);
+              if (userSnap.exists()) {
+                const userData = userSnap.data();
+                setAuthorAvatar(userData.image || "/avatar.png");
 
-              console.log("Image is avalable ",userData.image);
-              
-              setAuthorAvatar(userData.image || "/avatar.png");
-            } else {
-              console.log("Image is not avalable ");
-              // console.log(userSnap.data());
-              setAuthorAvatar("/avatar.png");
+                // If user document exists but does not have an image field, add it
+                if (!userData.image) {
+                  await updateDoc(userRef, { image: "/avatar.png" });
+                }
+              } else {
+                // If user document doesn't exist, create it with default avatar
+                await setDoc(userRef, { image: "/avatar.png" });
+                setAuthorAvatar("/avatar.png");
+              }
+            } catch (error) {
+              console.error("Error fetching user data:", error);
             }
           }
         } else {
@@ -137,24 +143,24 @@ export default function PostDetail() {
               onClick={handleLike}
             >
               <FaHeart className="h-6 w-6" />
-              <span className="hidden md:inline">{likes.length} Likes</span> {/* Hide text on mobile */}
-              <span className="md:hidden">{likes.length}</span> {/* Show only number on mobile */}
+              <span className="hidden md:inline">{likes.length} Likes</span>
+              <span className="md:hidden">{likes.length}</span>
             </button>
             <button
               className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors"
               onClick={() => setShowComments(!showComments)}
             >
               <FaComment className="h-6 w-6" />
-              <span className="hidden md:inline">{comments.length} Comments</span> {/* Hide text on mobile */}
-              <span className="md:hidden">{comments.length}</span> {/* Show only number on mobile */}
+              <span className="hidden md:inline">{comments.length} Comments</span>
+              <span className="md:hidden">{comments.length}</span>
             </button>
             <button
               className="flex items-center space-x-2 text-blue-500 hover:text-blue-600 transition-colors"
               onClick={handleShare}
             >
               <FaShareAlt className="h-6 w-6" />
-              <span className="hidden md:inline">Share</span> {/* Hide text on mobile */}
-              <span className="md:hidden">🔗</span> {/* Optional: Show a different icon or nothing on mobile */}
+              <span className="hidden md:inline">Share</span>
+              <span className="md:hidden">🔗</span>
             </button>
           </div>
 

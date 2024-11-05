@@ -8,6 +8,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { auth, db } from '../../firebase';
 import { User } from 'firebase/auth';
+import Navbar from '../Navbar/Navbar';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -35,6 +36,8 @@ const NewBlog = () => {
         
         // Fetch user data from Firestore
         const userDoc = await getDoc(doc(db, 'users', user.uid));
+        console.log("data exists :",user.uid);
+        
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setAuthor(userData.name || ''); // Set author name from Firestore
@@ -82,6 +85,8 @@ const NewBlog = () => {
   }
 
   return (
+    <>
+    <Navbar/>
     <div className="container mx-auto p-4 bg-white text-black">
       {user ? (
         <>
@@ -125,7 +130,7 @@ const NewBlog = () => {
                 type="text"
                 placeholder="Enter your name"
                 value={author}
-                // onChange={(e) => setAuthor(e.target.value)}
+                onChange={(e) => setAuthor(e.target.value)}
                 className="w-full p-3 border border-gray-300 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition duration-200"
                 required
               />
@@ -156,6 +161,7 @@ const NewBlog = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

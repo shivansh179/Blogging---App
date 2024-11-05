@@ -73,7 +73,7 @@ export default function Feed() {
     <RouteGuard>
       <>
         <Navbar />
-        <div className="p-6 bg-gradient-to-r from-indigo-800 to-purple-100 min-h-screen">
+        <div className="p-6 bg-gradient-to-b from-purple-100 to-indigo-800  min-h-screen">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">
               Blog Feed
