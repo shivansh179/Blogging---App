@@ -16,20 +16,20 @@ export default function Feed() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get the logged-in user's email
-    const auth = getAuth();
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUserEmail(user.email);
-        fetchFollowedAuthors(user.email); // Fetch authors the user follows
-      } else {
-        setUserEmail(null);
-        setFollowedAuthors([]); // Clear followed authors if logged out
-      }
-    });
+  const auth = getAuth();
+  const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+    if (user?.email) {
+      setUserEmail(user.email);
+      fetchFollowedAuthors(user.email); // Fetch authors the user follows
+    } else {
+      setUserEmail(null);
+      setFollowedAuthors([]); // Clear followed authors if logged out
+    }
+  });
 
-    return () => unsubscribeAuth();
-  }, []);
+  return () => unsubscribeAuth();
+}, []);
+
 
   // Fetch authors that the logged-in user follows
   const fetchFollowedAuthors = async (email: string) => {

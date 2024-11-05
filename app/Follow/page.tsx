@@ -15,18 +15,20 @@ const SearchPage: React.FC = () => {
   const [followedAuthors, setFollowedAuthors] = useState<string[]>([]); // List of followed authors
   const [followedDocs, setFollowedDocs] = useState<{ [author: string]: string }>({}); // Store author and follow document ID
 
+
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUserEmail(user.email);
-        fetchFollowedAuthors(user.email); // Fetch followed authors for the logged-in user
+        fetchFollowedAuthors(user.email!); // Non-null assertion since we know user.email exists
       }
     });
 
     return () => unsubscribe();
   }, []);
 
+  
   const fetchSuggestions = async () => {
     if (searchTerm.trim() === "") {
       setSuggestions([]);
