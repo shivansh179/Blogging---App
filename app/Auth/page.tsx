@@ -28,7 +28,7 @@ export default function Auth() {
         }
 
         const userCred = await createUserWithEmailAndPassword(auth, email, password);
-        
+
         // Save user name and email in Firestore
         await setDoc(doc(db, "users", userCred.user.uid), {
           email,
@@ -42,15 +42,17 @@ export default function Auth() {
       }
     } catch (err) {
       console.log(err);
-      
       setError("Authentication failed. Please try again.");
     }
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gradient-to-r from-purple-600 via-pink-600 to-red-600">
-      <div className=" backdrop-blur-sm backdrop-brightness-150  rounded-lg shadow-lg p-8 max-w-md w-full">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+    <div
+      className="flex items-center justify-center h-screen bg-cover bg-center"
+      style={{ backgroundImage: "url('/blog.jpg')" }} // Cloud image
+    >
+      <div className="bg-white bg-opacity-80 backdrop-blur-sm backdrop-filter rounded-lg shadow-lg p-8 max-w-md w-full border border-gray-200">
+        <h2 className="text-3xl font-semibold text-center text-gray-900 mb-6">
           {isRegistering ? "Register" : "Login"}
         </h2>
 
@@ -63,7 +65,7 @@ export default function Auth() {
             placeholder="Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mb-4 w-full p-3 border rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-600"
+            className="mb-4 w-full p-3 border rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         )}
 
@@ -73,7 +75,7 @@ export default function Auth() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mb-4 w-full p-3 border rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-600"
+          className="mb-4 w-full p-3 border rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
         {/* Password Input */}
@@ -82,13 +84,13 @@ export default function Auth() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mb-6 w-full p-3 border rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-600"
+          className="mb-6 w-full p-3 border rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
         {/* Auth Button */}
         <button
           onClick={handleAuth}
-          className="w-full p-3 bg-gradient-to-r from-purple-600 to-red-600 text-white font-semibold rounded-lg hover:bg-gradient-to-r hover:from-purple-700 hover:to-red-700 transition duration-200"
+          className="w-full p-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200"
         >
           {isRegistering ? "Register" : "Login"}
         </button>
@@ -96,7 +98,7 @@ export default function Auth() {
         {/* Toggle Between Register and Login */}
         <button
           onClick={() => setIsRegistering(!isRegistering)}
-          className="mt-4 w-full text-center text-purple-700 hover:underline"
+          className="mt-4 w-full text-center text-blue-600 hover:underline"
         >
           {isRegistering
             ? "Already have an account? Login"
