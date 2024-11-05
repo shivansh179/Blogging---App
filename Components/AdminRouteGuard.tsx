@@ -12,7 +12,7 @@ export default function AdminRouteGuard({ children }: { children: JSX.Element })
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && user.email?.includes(admin.email)) {
+      if (user && admin.email.includes(user.email)) {
         setIsAuthenticated(true);
       } else {
         router.push("/");

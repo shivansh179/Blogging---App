@@ -11,6 +11,8 @@ export default function Profile() {
   const [name, setName] = useState("");
   const [imageUrl, setImageUrl] = useState<string>(""); // Direct URL for the image
   const [userImage, setUserImage] = useState<string | null>(null); // To store user's existing image URL
+  const [followersCount, setFollowersCount] = useState(0); // Store follower count
+  const [followingCount, setFollowingCount] = useState(0); // Store following count
   const router = useRouter();
 
   useEffect(() => {
@@ -29,6 +31,16 @@ export default function Profile() {
           setUserImage(userData.image || null); // Set existing image URL if present
           setName(userData.name || ""); // Set existing name if available
         }
+
+        // Fetching follower count
+        const followersRef = collection(db, "users", user.uid, "followers");
+        const followersSnapshot = await getDocs(followersRef);
+        setFollowersCount(followersSnapshot.size);
+
+        // Fetching following count
+        const followingRef = collection(db, "users", user.uid, "following");
+        const followingSnapshot = await getDocs(followingRef);
+        setFollowingCount(followingSnapshot.size);
       } else {
         router.push("/Auth"); // Redirect to login if not authenticated
       }
@@ -37,7 +49,6 @@ export default function Profile() {
     return () => unsubscribe(); // Clean up on component unmount
   }, [router]);
 
- 
   const handleUpdateProfile = async () => {
     if (user) {
       // Query the users collection to check if the user exists based on their email
@@ -52,15 +63,15 @@ export default function Profile() {
         // If the user does not exist, create a new document
         const userDocRef = doc(db, "users", user.uid); // Use UID for new document
         await setDoc(userDocRef, { name, image: imageUrl, email: user.email });
+      }
+
+      // Update the user's display name in Firebase Authentication
+      await updateProfile(user, { displayName: name });
+      setUserImage(imageUrl);
+
+      // Update the local state
     }
-    
-    // Update the user's display name in Firebase Authentication
-    await updateProfile(user, { displayName: name });
-    setUserImage(imageUrl);
-    
-    // Update the local state
-}
-};
+  };
 
   const handleDeleteAccount = async () => {
     if (user) {
@@ -100,6 +111,16 @@ export default function Profile() {
             className="border border-gray-300 rounded-lg p-2 w-full"
             placeholder="Enter your name"
           />
+        </div>
+
+        {/* Follower and Following Count */}
+        <div className="mb-4 text-center">
+          <div className="inline-block text-gray-700 mx-4">
+            <span className="font-bold text-lg">{followersCount}</span> Followers
+          </div>
+          <div className="inline-block text-gray-700 mx-4">
+            <span className="font-bold text-lg">{followingCount}</span> Following
+          </div>
         </div>
 
         {/* Update Button */}

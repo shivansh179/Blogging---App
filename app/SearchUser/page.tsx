@@ -37,26 +37,26 @@ export default function SearchUser() {
     setLoading(true);
 
     try {
-      const q = query(
-        collection(db, "users"),
-        where("email", ">=", searchTerm),
-        where("email", "<=", searchTerm + "\uf8ff"), // Firestore search range trick
-        limit(5) // Limit the number of suggestions
-      );
-      const querySnapshot = await getDocs(q);
+        const q = query(
+            collection(db, "posts"),
+            where("author", ">=", searchTerm),
+            where("author", "<=", searchTerm + "\uf8ff"), // Firestore search range trick
+            limit(5) // Limit the number of suggestions
+        );
+        const querySnapshot = await getDocs(q);
 
-      if (querySnapshot.empty) {
-        setSuggestions([]);
-      } else {
-        setSuggestions(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-      }
+        if (querySnapshot.empty) {
+            setSuggestions([]);
+        } else {
+            setSuggestions(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        }
     } catch (err) {
-      console.error("Error fetching suggestions:", err);
-      setError("Error fetching suggestions.");
+        console.error("Error fetching suggestions:", err);
+        setError("Error fetching suggestions.");
     }
 
     setLoading(false);
-  };
+};
 
   // Function to handle navigation to user-specific page
   const goToUserProfile = (id: string) => {
@@ -64,13 +64,13 @@ export default function SearchUser() {
   };
 
   return (
-    <div className="p-8 min-h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
+    <div className="max-w-5xl mx-auto bg-white p-6 shadow-lg rounded-lg">
       <h1 className="text-3xl font-bold mb-6 text-center">Search Users</h1>
 
-      <div className="bg-white rounded-lg shadow-lg p-6 text-gray-800">
+      <div className="p-4 shadow-lg bg-indigo-600 text-black shadow-white">
         <input
           type="text"
-          placeholder="Search by email"
+          placeholder="Search by name"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="p-3 w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -96,7 +96,7 @@ export default function SearchUser() {
                     onClick={() => goToUserProfile(user.id)}
                     className="p-3 border-b cursor-pointer hover:bg-gray-100"
                   >
-                    <p>{user.email}</p>
+                    <p>{user.author}</p>
                   </div>
                 ))}
               </div>
@@ -111,22 +111,6 @@ export default function SearchUser() {
         >
           Search
         </button>
-      </div>
-
-      {/* Render Posts */}
-      <div className="mt-8">
-        {posts.map((post) => (
-          <div
-            key={post.id}
-            className="bg-white shadow-lg rounded-lg overflow-hidden mb-8 hover:shadow-xl transition-shadow duration-300"
-            onClick={() => goToUserProfile(post.id)} // Navigate to user profile on click
-          >
-            <div className="p-4">
-              <h2 className="text-xl font-semibold">{post.title}</h2>
-              <p className="text-gray-600 mt-2">{post.content}</p>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );
