@@ -12,7 +12,7 @@ export default function AdminRouteGuard({ children }: { children: JSX.Element })
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && admin.email.includes(user.email)) {
+      if (user && user.email && admin.email.includes(user.email)) {
         setIsAuthenticated(true);
       } else {
         router.push("/");
@@ -24,7 +24,7 @@ export default function AdminRouteGuard({ children }: { children: JSX.Element })
   }, [router]);
 
   if (loading) {
-    return <div>loading...</div>; // Show a loading indicator while checking auth
+    return <div>Loading...</div>; // Show a loading indicator while checking auth
   }
 
   if (!isAuthenticated) {

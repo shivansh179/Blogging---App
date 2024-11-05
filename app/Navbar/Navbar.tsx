@@ -29,7 +29,7 @@ export default function Navbar() {
           const userData = querySnapshot.docs[0].data();
           setProfileImage(userData.image || '/avatar.png');
         }
-        if (admin.email.includes(user.email)) {
+        if (user.email && admin.email.includes(user.email)) {  // Added null check here
           setAdminRights(true);
         }
       } else {
@@ -113,50 +113,50 @@ export default function Navbar() {
       {/* Mobile Drawer */}
       <Drawer anchor="left" open={drawerOpen} onClose={() => toggleDrawer(false)}>
         <List sx={{ width: 250 }}>
-          <ListItem button onClick={() => toggleDrawer(false)}>
+          <ListItem  onClick={() => toggleDrawer(false)}>
             <ListItemText primary="UniFy" />
           </ListItem>
           <Link href="/Feed" passHref>
-            <ListItem button onClick={() => toggleDrawer(false)}>
+            <ListItem  onClick={() => toggleDrawer(false)}>
               <ListItemText primary="Feed" />
             </ListItem>
           </Link>
           <Link href="/SearchUser" passHref>
-            <ListItem button onClick={() => toggleDrawer(false)}>
+            <ListItem  onClick={() => toggleDrawer(false)}>
               <ListItemText primary="Search Users" />
             </ListItem>
           </Link>
           <Link href="/CreatePost" passHref>
-            <ListItem button onClick={() => toggleDrawer(false)}>
+            <ListItem  onClick={() => toggleDrawer(false)}>
               <ListItemText primary="Create Post" />
             </ListItem>
           </Link>
           <Link href="/Follow" passHref>
-            <ListItem button onClick={() => toggleDrawer(false)}>
+            <ListItem  onClick={() => toggleDrawer(false)}>
               <ListItemText primary="Follow" />
             </ListItem>
           </Link>
           {user && (
             <Link href="/Profiles" passHref>
-              <ListItem button onClick={() => toggleDrawer(false)}>
+              <ListItem  onClick={() => toggleDrawer(false)}>
                 <ListItemText primary="Profile" />
               </ListItem>
             </Link>
           )}
           {adminRights && (
             <Link href="/Admin" passHref>
-              <ListItem button onClick={() => toggleDrawer(false)}>
+              <ListItem  onClick={() => toggleDrawer(false)}>
                 <ListItemText primary="Admin" />
               </ListItem>
             </Link>
           )}
           {user ? (
-            <ListItem button onClick={() => { handleLogout(); toggleDrawer(false); }}>
+            <ListItem  onClick={() => { handleLogout(); toggleDrawer(false); }}>
               <ListItemText primary="Logout" />
             </ListItem>
           ) : (
             <Link href="/Auth" passHref>
-              <ListItem button onClick={() => toggleDrawer(false)}>
+              <ListItem  onClick={() => toggleDrawer(false)}>
                 <ListItemText primary="Login" />
               </ListItem>
             </Link>
