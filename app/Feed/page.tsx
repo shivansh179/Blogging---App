@@ -16,28 +16,26 @@ export default function Feed() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  const auth = getAuth();
-  const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-    if (user?.email) {
-      setUserEmail(user.email);
-      fetchFollowedAuthors(user.email); // Fetch authors the user follows
-    } else {
-      setUserEmail(null);
-      setFollowedAuthors([]); // Clear followed authors if logged out
-    }
-  });
+    const auth = getAuth();
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (user?.email) {
+        setUserEmail(user.email);
+        fetchFollowedAuthors(user.email);
+      } else {
+        setUserEmail(null);
+        setFollowedAuthors([]);
+      }
+    });
 
-  return () => unsubscribeAuth();
-}, []);
+    return () => unsubscribeAuth();
+  }, []);
 
-
-  // Fetch authors that the logged-in user follows
   const fetchFollowedAuthors = async (email: string) => {
     const qFollow = query(collection(db, "follow"), where("followedBy", "==", email));
     onSnapshot(qFollow, (snapshot) => {
       const followed: string[] = [];
       snapshot.forEach((doc) => {
-        followed.push(doc.data().author); // Collect authors the user follows
+        followed.push(doc.data().author);
       });
       setFollowedAuthors(followed);
     });
@@ -45,16 +43,14 @@ export default function Feed() {
 
   useEffect(() => {
     if (followedAuthors.length > 0) {
-      setLoading(true); // Start loading when posts fetching begins
+      setLoading(true);
 
-      // Fetch posts only from followed authors
       const qPosts = query(collection(db, "posts"), where("author", "in", followedAuthors));
       const unsubscribePosts = onSnapshot(qPosts, (snapshot) => {
         setPosts(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-        setLoading(false); // Stop loading once posts are loaded
+        setLoading(false);
       });
 
-      // Fetching users to get author avatars
       const qUsers = query(collection(db, "users"));
       const unsubscribeUsers = onSnapshot(qUsers, (snapshot) => {
         setUsers(snapshot.docs.map((doc) => ({ email: doc.data().email, image: doc.data().image })));
@@ -65,30 +61,26 @@ export default function Feed() {
         unsubscribeUsers();
       };
     } else {
-      setLoading(false); // Stop loading if no followed authors
+      setLoading(false);
     }
   }, [followedAuthors]);
 
-  // Helper function to get the avatar of the author from the users collection
   const getUserAvatar = (email: string) => {
     const user = users.find((user) => user.email === email);
-    return user ? user.image : "/avatar.png"; // Default avatar if user not found
+    return user ? user.image : "/avatar.png";
   };
 
   return (
     <RouteGuard>
       <>
         <Navbar />
-        <div className="p-6 bg-gradient-to-b from-purple-100 to-indigo-800 min-h-screen">
+        <div className="p-6 bg-gradient-to-b from-blue-100 to-blue-50 min-h-screen">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">
-              Blog Feed
-            </h1>
+            <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Blog Feed</h1>
 
             {loading ? (
-              // Loading spinner
               <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600"></div>
+                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
               </div>
             ) : (
               <>
@@ -99,36 +91,29 @@ export default function Feed() {
                 {posts.map((post) => (
                   <div
                     key={post.id}
-                    className="bg-white shadow-lg rounded-lg overflow-hidden mb-8 hover:shadow-xl transition-shadow duration-300"
+                    className="bg-white shadow-lg rounded-lg overflow-hidden mb-8 transition-transform transform hover:-translate-y-1 hover:shadow-2xl duration-300"
                   >
-                    {/* Author Info */}
-                    <div className="flex items-center p-4 bg-indigo-50 border-b">
+                    <div className="flex items-center p-4 bg-gray-100 border-b">
                       <img
-                        src={getUserAvatar(post.email)} // Fetching the avatar based on post.email
+                        src={getUserAvatar(post.email)}
                         alt="Author Avatar"
-                        className="h-12 w-12 rounded-full object-cover border-2 border-indigo-400"
+                        className="h-10 w-10 rounded-full object-cover border-2 border-blue-300"
                       />
-                      <div className="ml-4">
-                        <h2 className="text-lg font-semibold text-indigo-700">
-                          {post.author}
-                        </h2>
-                        <p className="text-sm text-gray-500">
-                          {new Date(post.date).toLocaleDateString()}
-                        </p>
+                      <div className="ml-3">
+                        <h2 className="text-lg font-semibold text-gray-700">{post.author}</h2>
+                        <p className="text-sm text-gray-400">{new Date(post.date).toLocaleDateString()}</p>
                       </div>
                     </div>
 
-                    {/* Post Title (Clickable) */}
                     <div className="p-6">
                       <Link href={`/${post.id}`}>
-                        <h3 className="text-2xl font-bold mb-4 text-gray-800 hover:text-indigo-700 transition-colors duration-200 cursor-pointer">
+                        <h3 className="text-2xl font-semibold mb-4 text-gray-800 hover:text-blue-600 transition duration-200 cursor-pointer">
                           {post.title}
                         </h3>
                       </Link>
                     </div>
 
-                    {/* Post Footer */}
-                    <div className="flex justify-between px-6 py-4 bg-gray-50 text-sm text-gray-500 border-t">
+                    <div className="flex justify-between px-6 py-4 bg-gray-100 text-sm text-gray-500 border-t">
                       <span>Created by: {post.author}</span>
                       <span>Posted on: {new Date(post.date).toLocaleDateString()}</span>
                     </div>

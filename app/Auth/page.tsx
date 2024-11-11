@@ -48,34 +48,36 @@ export default function Auth() {
 
   return (
     <div
-      className="flex items-center justify-center h-screen bg-cover bg-center p-4"
-      style={{ backgroundImage: "url('/blog.jpg')" }} // Cloud image
+      className="flex items-center justify-center h-screen bg-cover bg-center p-6"
+      style={{ backgroundImage: "url('/blog.jpg')" }}
     >
-      <div className="bg-white bg-opacity-80 backdrop-blur-sm backdrop-filter rounded-lg shadow-lg p-8 max-w-md w-full border border-gray-200">
-        <h2 className="text-3xl font-semibold text-center text-gray-900 mb-6">
-          {isRegistering ? "Register" : "Login"}
+      <div className="absolute inset-0 bg-black opacity-40"></div> {/* Background Overlay */}
+
+      <div className="relative bg-white bg-opacity-90 backdrop-blur-lg rounded-xl shadow-2xl p-10 w-full max-w-lg border border-gray-300 text-center">
+        <h2 className="text-4xl font-bold text-gray-900 mb-6">
+          {isRegistering ? "Create Account" : "Welcome Back"}
         </h2>
 
-        {error && <div className="text-red-500 text-center mb-4">{error}</div>}
+        {error && <div className="text-red-500 mb-4">{error}</div>}
 
         {/* Name Input (Only for Registration) */}
         {isRegistering && (
           <input
             type="text"
-            placeholder="Name"
+            placeholder="Your Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mb-4 w-full p-3 border rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mb-4 w-full p-3 border rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         )}
 
         {/* Email Input */}
         <input
           type="email"
-          placeholder="Email"
+          placeholder="Email Address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mb-4 w-full p-3 border rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="mb-4 w-full p-3 border rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
         {/* Password Input */}
@@ -84,25 +86,25 @@ export default function Auth() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mb-6 w-full p-3 border rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="mb-6 w-full p-3 border rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
         {/* Auth Button */}
         <button
           onClick={handleAuth}
-          className="w-full p-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200"
+          className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-200 transform hover:scale-105"
         >
-          {isRegistering ? "Register" : "Login"}
+          {isRegistering ? "Sign Up" : "Log In"}
         </button>
 
         {/* Toggle Between Register and Login */}
         <button
           onClick={() => setIsRegistering(!isRegistering)}
-          className="mt-4 w-full text-center text-blue-600 hover:underline"
+          className="mt-4 text-blue-600 hover:underline transition-all duration-200"
         >
           {isRegistering
-            ? "Already have an account? Login"
-            : "Need an account? Register"}
+            ? "Already have an account? Log In"
+            : "Don't have an account? Sign Up"}
         </button>
       </div>
     </div>

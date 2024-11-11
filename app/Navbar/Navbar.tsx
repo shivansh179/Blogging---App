@@ -42,7 +42,7 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     await signOut(auth);
-    router.push('/Auth');
+    router.push('/');
   };
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
