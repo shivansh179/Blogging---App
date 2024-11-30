@@ -5,14 +5,16 @@ import { auth, db } from "../../firebase"; // Firebase imports
 import { onAuthStateChanged, updateProfile, deleteUser } from "firebase/auth";
 import { doc, updateDoc, getDocs, collection, query, where, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function Profile() {
   const [user, setUser] = useState<any>(null);
   const [name, setName] = useState("");
-  const [imageUrl, setImageUrl] = useState<string>(""); // Direct URL for the image
   const [userImage, setUserImage] = useState<string | null>(null); // To store user's existing image URL
+  const [imageFile, setImageFile] = useState<File | null>(null); // Store selected file
   const [followersCount, setFollowersCount] = useState(0); // Store follower count
   const [followingCount, setFollowingCount] = useState(0); // Store following count
+  const [isLoading, setIsLoading] = useState(false); // Loading state for updates
   const router = useRouter();
 
   useEffect(() => {
@@ -50,26 +52,40 @@ export default function Profile() {
   }, [router]);
 
   const handleUpdateProfile = async () => {
-    if (user) {
-      // Query the users collection to check if the user exists based on their email
-      const q = query(collection(db, "users"), where("email", "==", user.email));
-      const querySnapshot = await getDocs(q);
+    if (!user) return;
 
-      if (!querySnapshot.empty) {
-        // If the user exists, update their document with name and image URL
-        const userDocRef = querySnapshot.docs[0].ref; // Get reference to the document
-        await updateDoc(userDocRef, { name, image: imageUrl });
-      } else {
-        // If the user does not exist, create a new document
-        const userDocRef = doc(db, "users", user.uid); // Use UID for new document
-        await setDoc(userDocRef, { name, image: imageUrl, email: user.email });
+    let imageUrl = userImage; // Use existing image if no new file is uploaded
+    setIsLoading(true); // Start loading
+
+    try {
+      if (imageFile) {
+        // Upload the image to Cloudinary
+        const formData = new FormData();
+        formData.append("file", imageFile); // The selected file
+        formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || ""); // Cloudinary preset
+        formData.append("cloud_name", process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || ""); // Cloudinary cloud name
+
+        const response = await axios.post(
+          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+          formData
+        );
+
+        imageUrl = response.data.secure_url; // Get the uploaded image URL
       }
 
-      // Update the user's display name in Firebase Authentication
-      await updateProfile(user, { displayName: name });
-      setUserImage(imageUrl);
+      // Save the new name and image URL to Firestore
+      const userDocRef = doc(db, "users", user.uid); // Reference to user's Firestore document
+      await updateDoc(userDocRef, { name, image: imageUrl });
 
-      // Update the local state
+      // Update local state
+      setUserImage(imageUrl);
+      setImageFile(null); // Clear selected file
+      alert("Profile updated successfully!");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile. Please try again.");
+    } finally {
+      setIsLoading(false); // Stop loading
     }
   };
 
@@ -93,11 +109,10 @@ export default function Profile() {
             className="h-32 w-32 rounded-full object-cover border-2 border-indigo-400"
           />
           <input
-            type="text"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            className="mt-2 border border-gray-300 rounded-lg p-2 w-full"
-            placeholder="Enter the image URL"
+            type="file"
+            accept="image/*" // Accept only image files
+            onChange={(e) => setImageFile(e.target.files?.[0] || null)} // Capture selected file
+            className="mt-2"
           />
         </div>
 
@@ -124,20 +139,27 @@ export default function Profile() {
         </div>
 
         {/* Update Button */}
-        <button
-          onClick={handleUpdateProfile}
-          className="bg-indigo-500 text-white py-2 px-4 rounded-lg hover:bg-indigo-600 transition"
-        >
-          Update Profile
-        </button>
+<button
+  onClick={handleUpdateProfile}
+  disabled={isLoading} // Disable button during loading
+  className={`w-full py-3 px-4 rounded-lg text-lg font-semibold transition ${
+    isLoading
+      ? "bg-indigo-300 cursor-not-allowed"
+      : "bg-indigo-500 text-white hover:bg-indigo-600"
+  }`}
+>
+  {isLoading ? "Updating..." : "Update Profile"}
+</button>
 
-        {/* Delete Account Button */}
-        <button
-          onClick={handleDeleteAccount}
-          className="mt-4 bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition"
-        >
-          Delete Account
-        </button>
+{/* Delete Account Button */}
+<button
+  onClick={handleDeleteAccount}
+  className="w-full mt-4 py-3 px-4 rounded-lg text-lg font-semibold bg-red-500 text-white hover:bg-red-600 transition"
+>
+  Delete Account
+</button>
+
+
       </div>
     </div>
   );
