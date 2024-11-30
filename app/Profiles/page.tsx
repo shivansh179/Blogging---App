@@ -74,8 +74,12 @@ export default function Profile() {
       }
 
       // Save the new name and image URL to Firestore
-      const userDocRef = doc(db, "users", user.uid); // Reference to user's Firestore document
-      await updateDoc(userDocRef, { name, image: imageUrl });
+      const userDocRef = doc(db, "users", user.email || ""); // Reference to user's Firestore document
+      await setDoc(
+        userDocRef,
+        { name, image: imageUrl, email: user.email },
+        { merge: true }
+      );
 
       // Update local state
       setUserImage(imageUrl);
@@ -91,8 +95,14 @@ export default function Profile() {
 
   const handleDeleteAccount = async () => {
     if (user) {
-      await deleteUser(user); // Delete the user account
-      router.push("/Auth"); // Redirect to login after deletion
+      try {
+        await deleteUser(user); // Delete the user account
+        alert("Account deleted successfully!");
+        router.push("/Auth"); // Redirect to login after deletion
+      } catch (error) {
+        console.error("Error deleting account:", error);
+        alert("Failed to delete account. Please try again.");
+      }
     }
   };
 
@@ -139,27 +149,25 @@ export default function Profile() {
         </div>
 
         {/* Update Button */}
-<button
-  onClick={handleUpdateProfile}
-  disabled={isLoading} // Disable button during loading
-  className={`w-full py-3 px-4 rounded-lg text-lg font-semibold transition ${
-    isLoading
-      ? "bg-indigo-300 cursor-not-allowed"
-      : "bg-indigo-500 text-white hover:bg-indigo-600"
-  }`}
->
-  {isLoading ? "Updating..." : "Update Profile"}
-</button>
+        <button
+          onClick={handleUpdateProfile}
+          disabled={isLoading} // Disable button during loading
+          className={`w-full py-3 px-4 rounded-lg text-lg font-semibold transition ${
+            isLoading
+              ? "bg-indigo-300 cursor-not-allowed"
+              : "bg-indigo-500 text-white hover:bg-indigo-600"
+          }`}
+        >
+          {isLoading ? "Updating..." : "Update Profile"}
+        </button>
 
-{/* Delete Account Button */}
-<button
-  onClick={handleDeleteAccount}
-  className="w-full mt-4 py-3 px-4 rounded-lg text-lg font-semibold bg-red-500 text-white hover:bg-red-600 transition"
->
-  Delete Account
-</button>
-
-
+        {/* Delete Account Button */}
+        <button
+          onClick={handleDeleteAccount}
+          className="w-full mt-4 py-3 px-4 rounded-lg text-lg font-semibold bg-red-500 text-white hover:bg-red-600 transition"
+        >
+          Delete Account
+        </button>
       </div>
     </div>
   );
