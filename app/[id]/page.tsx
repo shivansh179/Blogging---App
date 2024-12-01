@@ -40,35 +40,49 @@ export default function PostDetail() {
 
   useEffect(() => {
     if (id) {
-      const fetchPost = async () => {
-        const docRef = doc(db, "posts", id as string);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          const postData = docSnap.data();
-          setPost({ id: docSnap.id, ...postData });
-          setLikes(postData.likes || []);
-          setComments(postData.comments || []);
-
-          // Fetch followers and following counts
-          const followersSnapshot = await getDocs(
-            query(collection(db, "follow"), where("author", "==", postData.email))
-          );
-          setFollowersCount(followersSnapshot.size);
-
-          const followingSnapshot = await getDocs(
-            query(collection(db, "follow"), where("followedBy", "==", postData.email))
-          );
-          setFollowingCount(followingSnapshot.size);
-        } else {
-          console.error("Post not found in Firestore.");
+      const fetchPostAndCounts = async () => {
+        try {
+          const docRef = doc(db, "posts", id as string);
+          const docSnap = await getDoc(docRef);
+  
+          if (docSnap.exists()) {
+            const postData = docSnap.data();
+            setPost({ id: docSnap.id, ...postData });
+            setLikes(postData.likes || []);
+            setComments(postData.comments || []);
+  
+            // Fetch the author's name using email
+            const userQuery = query(
+              collection(db, "users"),
+              where("email", "==", postData.email)
+            );
+            const userSnapshot = await getDocs(userQuery);
+            const loggedInUserName =
+              userSnapshot.docs[0]?.data()?.name || "Anonymous";
+  
+            // Fetch Follower Count by Author Name
+            const followersSnapshot = await getDocs(
+              query(collection(db, "follow"), where("author", "==", loggedInUserName))
+            );
+            setFollowersCount(followersSnapshot.size);
+  
+            // Fetch Following Count by Author Name
+            const followingSnapshot = await getDocs(
+              query(collection(db, "follow"), where("followedBy", "==", postData.email))
+            );
+            setFollowingCount(followingSnapshot.size);
+          } else {
+            console.error("Post not found in Firestore.");
+          }
+        } catch (error) {
+          console.error("Error fetching post and counts:", error);
         }
       };
-
-      fetchPost();
+  
+      fetchPostAndCounts();
     }
   }, [id]);
-
+  
   const handleLike = async () => {
     if (!post) return;
 

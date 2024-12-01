@@ -40,7 +40,7 @@ export default function Profile() {
 // <<<<<<< HEAD
         const loggedInUserName = querySnapshot.docs[0]?.data()?.author || user.displayName;
 
-        // Fetch user posts
+        // Fetch user posts 
         const postsRef = collection(db, "posts");
         const postsQuery = query(postsRef, where("author", "==", loggedInUserName));
         const postsSnapshot = await getDocs(postsQuery);
