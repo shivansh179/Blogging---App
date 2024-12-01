@@ -78,7 +78,7 @@ const NewBlog = () => {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black text-white text-2xl font-bold p-6">
         <div className="relative p-8 bg-gray-900 rounded-lg shadow-lg">
-          <span>Please use a laptop or larger screen to write the blog.</span>
+          <span>Please use  laptop or larger screen to write the blog.</span>
         </div>
       </div>
     );
