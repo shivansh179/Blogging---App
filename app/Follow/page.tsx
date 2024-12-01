@@ -5,7 +5,7 @@ import {
   collection,
   query,
   where,
-  getDocs,
+  onSnapshot,
   addDoc,
   deleteDoc,
   doc,
@@ -14,6 +14,8 @@ import { db } from "@/firebase";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "../Navbar/Navbar";
 import { FaUserPlus, FaUserMinus } from "react-icons/fa"; // Import follow/unfollow icons
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer, toast } from "react-toastify";
 
 const SearchPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -28,7 +30,7 @@ const SearchPage: React.FC = () => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUserEmail(user.email);
-        fetchFollowedAuthors(user.email!); // Non-null assertion since we know user.email exists
+        fetchFollowedAuthors(user.email!); // Fetch followed authors in real time
       }
     });
 
@@ -47,76 +49,86 @@ const SearchPage: React.FC = () => {
     const q = query(postsRef, where("author", ">=", searchTerm), where("author", "<=", searchTerm + "\uf8ff"));
 
     try {
-      const querySnapshot = await getDocs(q);
-      const results: any[] = [];
-      querySnapshot.forEach((doc) => {
-        results.push({ id: doc.id, ...doc.data() });
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const results: any[] = [];
+        snapshot.forEach((doc) => {
+          results.push({ id: doc.id, ...doc.data() });
+        });
+        setSuggestions(results);
+        setLoading(false);
       });
-      setSuggestions(results);
+
+      return () => unsubscribe(); // Clean up
     } catch (error) {
       console.error("Error fetching suggestions:", error);
-    } finally {
       setLoading(false);
+      toast.error("Failed to fetch suggestions. Please try again.");
     }
   };
 
-  const fetchFollowedAuthors = async (email: string) => {
-    try {
-      const followRef = collection(db, "follow");
-      const q = query(followRef, where("followedBy", "==", email)); // Query where the logged-in user has followed
-      const querySnapshot = await getDocs(q);
+  const fetchFollowedAuthors = (email: string) => {
+    const followRef = collection(db, "follow");
+    const q = query(followRef, where("followedBy", "==", email));
+
+    return onSnapshot(q, (snapshot) => {
       const followed: string[] = [];
       const followedDocMap: { [author: string]: string } = {};
-      querySnapshot.forEach((doc) => {
+
+      snapshot.forEach((doc) => {
         const data = doc.data();
         if (data.author) {
           followed.push(data.author);
-          followedDocMap[data.author] = doc.id; // Map author to document ID for unfollowing
+          followedDocMap[data.author] = doc.id;
         }
       });
+
       setFollowedAuthors(followed);
       setFollowedDocs(followedDocMap);
-    } catch (error) {
-      console.error("Error fetching followed authors:", error);
-    }
+    });
   };
 
   const handleFollow = async (author: string) => {
     if (!userEmail) {
-      alert("You must be logged in to follow authors");
+      toast.error("You must be logged in to follow authors");
       return;
     }
 
     try {
-      await addDoc(collection(db, "follow"), {
+      const docRef = await addDoc(collection(db, "follow"), {
         author,
-        followedBy: userEmail, // Add the logged-in user's email to the follow document
+        followedBy: userEmail,
         followedAt: new Date(),
       });
-      setFollowedAuthors((prev) => [...prev, author]); // Update followed authors list locally
-      alert(`${author} added to your follow list!`);
+
+      setFollowedAuthors((prev) => [...prev, author]); // Add author locally
+      setFollowedDocs((prev) => ({ ...prev, [author]: docRef.id })); // Map new Firestore doc ID
+      toast.success(`${author} added to your follow list!`);
     } catch (error) {
-      console.error("Error adding to follow:", error);
+      console.error("Error adding follow:", error);
+      toast.error("Failed to follow the author. Please try again.");
     }
   };
 
   const handleUnfollow = async (author: string) => {
     if (!userEmail) {
-      alert("You must be logged in to unfollow authors");
+      toast.error("You must be logged in to unfollow authors");
       return;
     }
 
     const docId = followedDocs[author];
-    if (!docId) {
-      return; // Author not followed
-    }
+    if (!docId) return; // Author not followed
 
     try {
-      await deleteDoc(doc(db, "follow", docId)); // Delete the follow document from Firestore
-      setFollowedAuthors((prev) => prev.filter((a) => a !== author)); // Remove from local list
-      alert(`${author} has been unfollowed.`);
+      await deleteDoc(doc(db, "follow", docId)); // Remove follow document from Firestore
+      setFollowedAuthors((prev) => prev.filter((a) => a !== author)); // Remove locally
+      setFollowedDocs((prev) => {
+        const { [author]: _, ...rest } = prev;
+        return rest;
+      });
+      toast.success(`${author} has been unfollowed.`);
     } catch (error) {
       console.error("Error removing follow:", error);
+      toast.error("Failed to unfollow the author. Please try again.");
     }
   };
 
@@ -131,6 +143,7 @@ const SearchPage: React.FC = () => {
   return (
     <>
       <Navbar />
+      <ToastContainer position="top-right" autoClose={3000} />
       <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
         <div className="max-w-5xl mx-auto bg-white p-4 sm:p-6 shadow-lg rounded-lg">
           <h1 className="text-2xl sm:text-4xl font-extrabold text-gray-900 mb-4 sm:mb-6">

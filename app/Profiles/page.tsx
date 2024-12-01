@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ToastContainer, toast } from "react-toastify"; // Import Toastify
+import "react-toastify/dist/ReactToastify.css"; // Import Toastify CSS
 import { auth, db } from "../../firebase"; // Firebase imports
 import { onAuthStateChanged, updateProfile, deleteUser } from "firebase/auth";
 import { doc, updateDoc, getDocs, collection, query, where, setDoc } from "firebase/firestore";
@@ -35,13 +37,13 @@ export default function Profile() {
         }
 
         // Fetching follower count
-        const followersRef = collection(db, "users", user.uid, "followers");
-        const followersSnapshot = await getDocs(followersRef);
+        const followersQuery = query(collection(db, "follow"), where("author", "==", user.email));
+        const followersSnapshot = await getDocs(followersQuery);
         setFollowersCount(followersSnapshot.size);
 
         // Fetching following count
-        const followingRef = collection(db, "users", user.uid, "following");
-        const followingSnapshot = await getDocs(followingRef);
+        const followingQuery = query(collection(db, "follow"), where("followedBy", "==", user.email));
+        const followingSnapshot = await getDocs(followingQuery);
         setFollowingCount(followingSnapshot.size);
       } else {
         router.push("/Auth"); // Redirect to login if not authenticated
@@ -84,10 +86,10 @@ export default function Profile() {
       // Update local state
       setUserImage(imageUrl);
       setImageFile(null); // Clear selected file
-      alert("Profile updated successfully!");
+      toast.success("Profile updated successfully!"); // Success toast
     } catch (error) {
       console.error("Error updating profile:", error);
-      alert("Failed to update profile. Please try again.");
+      toast.error("Failed to update profile. Please try again."); // Error toast
     } finally {
       setIsLoading(false); // Stop loading
     }
@@ -97,17 +99,18 @@ export default function Profile() {
     if (user) {
       try {
         await deleteUser(user); // Delete the user account
-        alert("Account deleted successfully!");
+        toast.success("Account deleted successfully!"); // Success toast
         router.push("/Auth"); // Redirect to login after deletion
       } catch (error) {
         console.error("Error deleting account:", error);
-        alert("Failed to delete account. Please try again.");
+        toast.error("Failed to delete account. Please try again."); // Error toast
       }
     }
   };
 
   return (
     <div className="p-6 bg-gradient-to-r from-indigo-100 to-blue-100 min-h-screen">
+      <ToastContainer /> {/* Add Toastify container */}
       <div className="max-w-md mx-auto bg-white shadow-lg rounded-lg p-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-4">Profile</h1>
 
