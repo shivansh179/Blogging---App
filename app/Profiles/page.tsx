@@ -6,15 +6,17 @@ import { onAuthStateChanged, updateProfile, deleteUser } from "firebase/auth";
 import { doc, updateDoc, getDocs, collection, query, where, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import Link from "next/link"; // For navigation to dynamic route
 
 export default function Profile() {
   const [user, setUser] = useState<any>(null);
   const [name, setName] = useState("");
-  const [userImage, setUserImage] = useState<string | null>(null); // To store user's existing image URL
-  const [imageFile, setImageFile] = useState<File | null>(null); // Store selected file
-  const [followersCount, setFollowersCount] = useState(0); // Store follower count
-  const [followingCount, setFollowingCount] = useState(0); // Store following count
-  const [isLoading, setIsLoading] = useState(false); // Loading state for updates
+  const [userImage, setUserImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [userPosts, setUserPosts] = useState<any[]>([]); // State for user posts
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -23,82 +25,92 @@ export default function Profile() {
         setUser(user);
         setName(user.displayName || "");
 
-        // Query the users collection to find a document with matching email
+        // Fetch user data from Firestore
         const q = query(collection(db, "users"), where("email", "==", user.email));
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
-          // If the user exists in Firestore, get their data
           const userData = querySnapshot.docs[0].data();
-          setUserImage(userData.image || null); // Set existing image URL if present
-          setName(userData.name || ""); // Set existing name if available
+          setUserImage(userData.image || null);
+          setName(userData.name || "");
         }
 
-        // Fetching follower count
-        const followersRef = collection(db, "users", user.uid, "followers");
-        const followersSnapshot = await getDocs(followersRef);
+        const loggedInUserName = querySnapshot.docs[0]?.data()?.author || user.displayName;
+
+        // Fetch user posts
+        const postsRef = collection(db, "posts");
+        const postsQuery = query(postsRef, where("author", "==", loggedInUserName));
+        const postsSnapshot = await getDocs(postsQuery);
+
+        const posts = postsSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setUserPosts(posts); // Store user posts in state
+
+        // Fetch followers and following count
+        const followersRef = collection(db, "follow");
+        const followersQuery = query(followersRef, where("author", "==", loggedInUserName));
+        const followersSnapshot = await getDocs(followersQuery);
         setFollowersCount(followersSnapshot.size);
 
-        // Fetching following count
-        const followingRef = collection(db, "users", user.uid, "following");
-        const followingSnapshot = await getDocs(followingRef);
+        const followingRef = collection(db, "follow");
+        const followingQuery = query(followingRef, where("followedBy", "==", user.email));
+        const followingSnapshot = await getDocs(followingQuery);
         setFollowingCount(followingSnapshot.size);
       } else {
-        router.push("/Auth"); // Redirect to login if not authenticated
+        router.push("/Auth");
       }
     });
 
-    return () => unsubscribe(); // Clean up on component unmount
+    return () => unsubscribe();
   }, [router]);
 
   const handleUpdateProfile = async () => {
     if (!user) return;
 
-    let imageUrl = userImage; // Use existing image if no new file is uploaded
-    setIsLoading(true); // Start loading
+    let imageUrl = userImage;
+    setIsLoading(true);
 
     try {
       if (imageFile) {
-        // Upload the image to Cloudinary
         const formData = new FormData();
-        formData.append("file", imageFile); // The selected file
-        formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || ""); // Cloudinary preset
-        formData.append("cloud_name", process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || ""); // Cloudinary cloud name
+        formData.append("file", imageFile);
+        formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "");
+        formData.append("cloud_name", process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "");
 
         const response = await axios.post(
           `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
           formData
         );
 
-        imageUrl = response.data.secure_url; // Get the uploaded image URL
+        imageUrl = response.data.secure_url;
       }
 
-      // Save the new name and image URL to Firestore
-      const userDocRef = doc(db, "users", user.email || ""); // Reference to user's Firestore document
+      const userDocRef = doc(db, "users", user.email || "");
       await setDoc(
         userDocRef,
         { name, image: imageUrl, email: user.email },
         { merge: true }
       );
 
-      // Update local state
       setUserImage(imageUrl);
-      setImageFile(null); // Clear selected file
+      setImageFile(null);
       alert("Profile updated successfully!");
     } catch (error) {
       console.error("Error updating profile:", error);
       alert("Failed to update profile. Please try again.");
     } finally {
-      setIsLoading(false); // Stop loading
+      setIsLoading(false);
     }
   };
 
   const handleDeleteAccount = async () => {
     if (user) {
       try {
-        await deleteUser(user); // Delete the user account
+        await deleteUser(user);
         alert("Account deleted successfully!");
-        router.push("/Auth"); // Redirect to login after deletion
+        router.push("/Auth");
       } catch (error) {
         console.error("Error deleting account:", error);
         alert("Failed to delete account. Please try again.");
@@ -111,22 +123,20 @@ export default function Profile() {
       <div className="max-w-md mx-auto bg-white shadow-lg rounded-lg p-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-4">Profile</h1>
 
-        {/* Profile Image Section */}
         <div className="flex flex-col items-center mb-4">
           <img
-            src={userImage || "/avatar.png"} // Show user's image if available or default avatar
+            src={userImage || "/avatar.png"}
             alt="Profile"
             className="h-32 w-32 rounded-full object-cover border-2 border-indigo-400"
           />
           <input
             type="file"
-            accept="image/*" // Accept only image files
-            onChange={(e) => setImageFile(e.target.files?.[0] || null)} // Capture selected file
-            className="mt-2"
+            accept="image/*"
+            onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+            className="mb-2"
           />
         </div>
 
-        {/* Name Input */}
         <div className="mb-4">
           <label className="block text-gray-700">Name:</label>
           <input
@@ -138,7 +148,6 @@ export default function Profile() {
           />
         </div>
 
-        {/* Follower and Following Count */}
         <div className="mb-4 text-center">
           <div className="inline-block text-gray-700 mx-4">
             <span className="font-bold text-lg">{followersCount}</span> Followers
@@ -148,10 +157,9 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Update Button */}
         <button
           onClick={handleUpdateProfile}
-          disabled={isLoading} // Disable button during loading
+          disabled={isLoading}
           className={`w-full py-3 px-4 rounded-lg text-lg font-semibold transition ${
             isLoading
               ? "bg-indigo-300 cursor-not-allowed"
@@ -161,13 +169,26 @@ export default function Profile() {
           {isLoading ? "Updating..." : "Update Profile"}
         </button>
 
-        {/* Delete Account Button */}
         <button
           onClick={handleDeleteAccount}
           className="w-full mt-4 py-3 px-4 rounded-lg text-lg font-semibold bg-red-500 text-white hover:bg-red-600 transition"
         >
           Delete Account
         </button>
+      </div>
+
+      {/* User's Posts Grid */}
+      <div className="mt-8 max-w-4xl mx-auto">
+        <h2 className="text-xl font-semibold mb-4">Your Posts</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {userPosts.map((post) => (
+            <Link key={post.id} href={`/${post.id}`}>
+              <div className="block p-6 bg-white shadow rounded-lg hover:shadow-lg transition">
+                <h3 className="text-lg font-semibold text-gray-800">{post.title}</h3>
+               </div>
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   );

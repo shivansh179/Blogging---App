@@ -3,7 +3,17 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { db } from "../../firebase";
-import { doc, getDoc, updateDoc, arrayUnion, onSnapshot, collection } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  arrayUnion,
+  onSnapshot,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import Navbar from "../Navbar/Navbar";
 import { FaHeart, FaComment, FaShareAlt } from "react-icons/fa";
 
@@ -15,6 +25,8 @@ export default function PostDetail() {
   const [comment, setComment] = useState<string>("");
   const [users, setUsers] = useState<any[]>([]);
   const [showComments, setShowComments] = useState<boolean>(false);
+  const [followersCount, setFollowersCount] = useState<number>(0); // Follower count
+  const [followingCount, setFollowingCount] = useState<number>(0); // Following count
   const currentUserEmail = "user@example.com"; // Replace with authenticated user's email.
 
   useEffect(() => {
@@ -37,6 +49,17 @@ export default function PostDetail() {
           setPost({ id: docSnap.id, ...postData });
           setLikes(postData.likes || []);
           setComments(postData.comments || []);
+
+          // Fetch followers and following counts
+          const followersSnapshot = await getDocs(
+            query(collection(db, "follow"), where("author", "==", postData.email))
+          );
+          setFollowersCount(followersSnapshot.size);
+
+          const followingSnapshot = await getDocs(
+            query(collection(db, "follow"), where("followedBy", "==", postData.email))
+          );
+          setFollowingCount(followingSnapshot.size);
         } else {
           console.error("Post not found in Firestore.");
         }
@@ -110,9 +133,16 @@ export default function PostDetail() {
             />
             <div className="ml-4">
               <h2 className="text-xl font-semibold text-indigo-700">{getUserName(post.email)}</h2>
-              <p className="text-sm text-gray-500">
-                {new Date(post.date).toLocaleDateString()}
-              </p>
+              <p className="text-sm text-gray-500">{new Date(post.date).toLocaleDateString()}</p>
+              {/* Follower and Following Counts */}
+              <div className="mt-2 flex space-x-4 text-gray-600">
+                <div>
+                  <span className="font-semibold">{followersCount}</span> Followers
+                </div>
+                <div>
+                  <span className="font-semibold">{followingCount}</span> Following
+                </div>
+              </div>
             </div>
           </div>
 
@@ -181,11 +211,7 @@ export default function PostDetail() {
                   </li>
                 ))}
               </ul>
-
-              <form
-                onSubmit={handleCommentSubmit}
-                className="flex space-x-4"
-              >
+              <form onSubmit={handleCommentSubmit} className="flex space-x-4">
                 <input
                   type="text"
                   value={comment}

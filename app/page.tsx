@@ -18,7 +18,7 @@ const HomePage: FC = () => {
     <div className="bg-gray-50">
       {/* Hero Section */}
       <section
-        className="relative text-white py-32 md:py-40 lg:py-48"
+        className="relative text-white  py-32 md:py-40 lg:py-48"
         style={{
           backgroundImage: 'url(/bg.jpg)',
           backgroundSize: 'cover',

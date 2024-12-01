@@ -22,16 +22,38 @@ const SearchPage: React.FC = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null); // Logged-in user email
   const [followedAuthors, setFollowedAuthors] = useState<string[]>([]); // List of followed authors
   const [followedDocs, setFollowedDocs] = useState<{ [author: string]: string }>({}); // Store author and follow document ID
-
+  const [authorName, setAuthorName] = useState<{ [author: string]: string }>({}); // Store author and follow document ID
+ 
   useEffect(() => {
     const auth = getAuth();
+  
+    const fetchUserNameFromPosts = async (email: string) => {
+      try {
+        const postsRef = collection(db, "posts");
+        const q = query(postsRef, where("email", "==", email)); // Search by email
+        const querySnapshot = await getDocs(q);
+  
+        if (!querySnapshot.empty) {
+          const data = querySnapshot.docs[0].data();
+          setAuthorName(data.author); // Store the corresponding author name
+        } else {
+          console.log("No posts found for this email.");
+        }
+      } catch (error) {
+        console.error("Error fetching author name by email:", error);
+      }
+    };
+  
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setUserEmail(user.email);
-        fetchFollowedAuthors(user.email!); // Non-null assertion since we know user.email exists
+        setUserEmail(user.email); // Set logged-in user's email
+        fetchFollowedAuthors(user.email!); // Fetch followed authors
+        
+        // Fetch author name using email
+        fetchUserNameFromPosts(user.email!);
       }
     });
-
+  
     return () => unsubscribe();
   }, []);
 
@@ -40,18 +62,27 @@ const SearchPage: React.FC = () => {
       setSuggestions([]);
       return;
     }
-
+  
     setLoading(true);
-
-    const postsRef = collection(db, "posts");
-    const q = query(postsRef, where("author", ">=", searchTerm), where("author", "<=", searchTerm + "\uf8ff"));
-
+  
     try {
+      const postsRef = collection(db, "posts");
+      const q = query(
+        postsRef,
+        where("author", ">=", searchTerm),
+        where("author", "<=", searchTerm + "\uf8ff")
+      );
+  
       const querySnapshot = await getDocs(q);
       const results: any[] = [];
       querySnapshot.forEach((doc) => {
-        results.push({ id: doc.id, ...doc.data() });
+        const data = doc.data();
+        // Exclude the logged-in user's name
+        if (data.author !== authorName) {
+          results.push({ id: doc.id, ...data });
+        }
       });
+  
       setSuggestions(results);
     } catch (error) {
       console.error("Error fetching suggestions:", error);
@@ -59,6 +90,7 @@ const SearchPage: React.FC = () => {
       setLoading(false);
     }
   };
+  
 
   const fetchFollowedAuthors = async (email: string) => {
     try {
