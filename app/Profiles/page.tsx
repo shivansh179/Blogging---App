@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ToastContainer, toast } from "react-toastify"; // Import Toastify
+import "react-toastify/dist/ReactToastify.css"; // Import Toastify CSS
 import { auth, db } from "../../firebase"; // Firebase imports
 import { onAuthStateChanged, updateProfile, deleteUser } from "firebase/auth";
 import { doc, updateDoc, getDocs, collection, query, where, setDoc } from "firebase/firestore";
@@ -35,6 +37,7 @@ export default function Profile() {
           setName(userData.name || "");
         }
 
+// <<<<<<< HEAD
         const loggedInUserName = querySnapshot.docs[0]?.data()?.author || user.displayName;
 
         // Fetch user posts
@@ -56,6 +59,15 @@ export default function Profile() {
 
         const followingRef = collection(db, "follow");
         const followingQuery = query(followingRef, where("followedBy", "==", user.email));
+// =======
+//         // Fetching follower count
+//         const followersQuery = query(collection(db, "follow"), where("author", "==", user.email));
+//         const followersSnapshot = await getDocs(followersQuery);
+//         setFollowersCount(followersSnapshot.size);
+
+//         // Fetching following count
+//         const followingQuery = query(collection(db, "follow"), where("followedBy", "==", user.email));
+// >>>>>>> b800458da6b1f99cc00678d71974bb2207d4d115
         const followingSnapshot = await getDocs(followingQuery);
         setFollowingCount(followingSnapshot.size);
       } else {
@@ -95,11 +107,16 @@ export default function Profile() {
       );
 
       setUserImage(imageUrl);
+// <<<<<<< HEAD
       setImageFile(null);
       alert("Profile updated successfully!");
+// =======
+//       setImageFile(null); // Clear selected file
+//       toast.success("Profile updated successfully!"); // Success toast
+// >>>>>>> b800458da6b1f99cc00678d71974bb2207d4d115
     } catch (error) {
       console.error("Error updating profile:", error);
-      alert("Failed to update profile. Please try again.");
+      toast.error("Failed to update profile. Please try again."); // Error toast
     } finally {
       setIsLoading(false);
     }
@@ -108,18 +125,20 @@ export default function Profile() {
   const handleDeleteAccount = async () => {
     if (user) {
       try {
-        await deleteUser(user);
+         await deleteUser(user);
         alert("Account deleted successfully!");
         router.push("/Auth");
-      } catch (error) {
+ 
+       } catch (error) {
         console.error("Error deleting account:", error);
-        alert("Failed to delete account. Please try again.");
+        toast.error("Failed to delete account. Please try again."); // Error toast
       }
     }
   };
 
   return (
     <div className="p-6 bg-gradient-to-r from-indigo-100 to-blue-100 min-h-screen">
+      <ToastContainer /> {/* Add Toastify container */}
       <div className="max-w-md mx-auto bg-white shadow-lg rounded-lg p-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-4">Profile</h1>
 
