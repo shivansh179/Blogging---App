@@ -11,6 +11,7 @@ import {
   where,
   getDocs,
 } from "firebase/firestore";
+import Link from "next/link";
 
 export default function UserProfile() {
   const { id } = useParams(); // id is of type string | string[]
@@ -85,9 +86,11 @@ export default function UserProfile() {
   return (
     <>
       {/* Navbar */}
-      <nav className="bg-indigo-600 shadow-md py-4 px-6">
+      <nav className="bg-indigo-600 shadow-md py-4 px-2">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <h1 className="text-white text-2xl font-bold">UniFy Blog</h1>
+        <Link href="/Feed">
+                <h1 className="text-white text-2xl font-bold">UniFy Blog</h1>
+          </Link>
           <div>
             <a
               href="/Feed"
@@ -99,7 +102,7 @@ export default function UserProfile() {
         </div>
       </nav>
 
-      <div className="p-8 bg-gradient-to-br from-blue-100 via-purple-100 to-indigo-200 min-h-screen">
+      <div className="p-2 bg-gradient-to-br from-blue-100 via-purple-100 to-indigo-200 min-h-screen">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row bg-white shadow-lg rounded-lg overflow-hidden">
             {/* Profile Section */}
@@ -109,7 +112,7 @@ export default function UserProfile() {
                 alt={`${user.name}'s profile`}
                 className="rounded-full w-32 h-32 border-4 border-white object-cover shadow-lg"
               />
-              <h1 className="text-3xl font-bold mt-4">{user.name}</h1>
+              <h1 className="text-3xl font-bold mt-4 text-center">{user.name}</h1>
               <p className="text-sm opacity-75">{user.email}</p>
               <div className="flex space-x-6 mt-6">
                 <div className="text-center">

@@ -15,10 +15,12 @@ import {
   getDocs,
   setDoc,
 } from "firebase/firestore";
+import { IoSend } from "react-icons/io5";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "../Navbar/Navbar";
 import { FaHeart, FaComment, FaShareAlt } from "react-icons/fa";
 import Link from "next/link";
+import RouteGuard from "@/Components/RouteGuard";
 
 export default function PostDetail() {
   const { id } = useParams();
@@ -175,16 +177,17 @@ export default function PostDetail() {
   }
 
   return (
-    <>
+    <RouteGuard>
+      <>
       <Navbar />
-      <div className="p-4 bg-gradient-to-r from-indigo-100 to-blue-100 min-h-screen">
+      <div className="p-2 bg-gradient-to-r from-indigo-100 to-blue-100 min-h-screen">
         <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
           {/* Post Header */}
           <div className="flex items-center p-6 bg-indigo-50">
             <img
               src={getUserAvatar(post.email)}
               alt="Author Avatar"
-              className="h-12 w-12 rounded-full object-cover border-2 border-indigo-400"
+              className="h-12 w-12 mb-10 rounded-full object-cover border-2 border-indigo-400"
             />
             <div className="ml-4">
               <Link href={`/authorPage/${post.email}`}>
@@ -222,21 +225,23 @@ export default function PostDetail() {
               onClick={handleLike}
             >
               <FaHeart className="h-6 w-6" />
-              <span>{likes.length} Likes</span>
+              <span className="hidden md:block">{likes.length} Likes</span>
+              <span>{likes.length}</span>
             </button>
             <button
               className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors"
               onClick={() => setShowComments(!showComments)}
             >
               <FaComment className="h-6 w-6" />
-              <span>{comments.length} Comments</span>
+              <span className="hidden md:block">{comments.length} Comments</span>
+              <span>{comments.length}</span>
             </button>
             <button
               className="flex items-center space-x-2 text-blue-500 hover:text-blue-600 transition-colors"
               onClick={handleShare}
             >
               <FaShareAlt className="h-6 w-6" />
-              <span>Share</span>
+              <span className="hidden md:block">Share</span>
             </button>
           </div>
 
@@ -273,7 +278,8 @@ export default function PostDetail() {
                   type="submit"
                   className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors"
                 >
-                  Comment
+                  <span className="hidden md:block">Comment</span>
+                  <IoSend className="block md:hidden"/>
                 </button>
               </form>
             </div>
@@ -281,5 +287,6 @@ export default function PostDetail() {
         </div>
       </div>
     </>
+      </RouteGuard>
   );
 }

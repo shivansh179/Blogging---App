@@ -2,26 +2,70 @@
 
 import { useState, useEffect } from "react";
 import { db } from "../../firebase";
-import { collection, query, where, getDocs, limit, onSnapshot } from "firebase/firestore";
-import { useRouter } from "next/navigation";
+import {
+  collection,
+  query,
+  onSnapshot,
+  where,
+  getDocs,
+  limit,
+  addDoc,
+  Timestamp,
+} from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "../Navbar/Navbar";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function SearchUser() {
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [posts, setPosts] = useState<any[]>([]);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
-
-  const router = useRouter();
+  const [authors, setAuthors] = useState<any[]>([]);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [followedAuthors, setFollowedAuthors] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const qPosts = query(collection(db, "posts"));
-    const unsubscribePosts = onSnapshot(qPosts, (snapshot) => {
-      setPosts(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+    // Get the logged-in user's email
+    const auth = getAuth();
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (user?.email) {
+        setUserEmail(user.email);
+        fetchFollowedAuthors(user.email);
+      } else {
+        setUserEmail(null);
+      }
     });
-    return () => unsubscribePosts();
+
+    return () => unsubscribeAuth();
+  }, []);
+
+  const fetchFollowedAuthors = async (email: string) => {
+    const q = query(collection(db, "follow"), where("followedBy", "==", email));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const followed = new Set<string>();
+      snapshot.forEach((doc) => {
+        followed.add(doc.data().author);
+      });
+      setFollowedAuthors(followed);
+    });
+
+    return unsubscribe;
+  };
+
+  useEffect(() => {
+    // Fetch all authors from the posts collection
+    const qAuthors = query(collection(db, "posts"));
+    const unsubscribeAuthors = onSnapshot(qAuthors, (snapshot) => {
+      const authorsSet = new Set(
+        snapshot.docs.map((doc) => doc.data().author) // Collect unique authors
+      );
+      setAuthors([...authorsSet]);
+    });
+
+    return () => unsubscribeAuthors();
   }, []);
 
   useEffect(() => {
@@ -75,13 +119,30 @@ export default function SearchUser() {
     fetchSuggestions();
   };
 
-  const goToUserProfile = (id: string) => {
-    router.push(`/${id}`);
+  const handleFollow = async (author: string) => {
+    if (!userEmail) {
+      toast.error("You must be logged in to follow authors.");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "follow"), {
+        author,
+        followedBy: userEmail,
+        followedAt: Timestamp.now(),
+      });
+      setFollowedAuthors((prev) => new Set([...prev, author]));
+      toast.success(`You are now following ${author}`);
+    } catch (error) {
+      console.error("Error following author:", error);
+      toast.error("Failed to follow the author. Please try again.");
+    }
   };
 
   return (
     <>
       <Navbar />
+      <ToastContainer position="top-right" autoClose={3000} />
       <div className="max-w-5xl mt-5 mx-auto bg-gradient-to-b from-gray-50 to-white p-6 shadow-lg rounded-lg">
         <h1 className="text-3xl font-bold mb-6 text-center text-indigo-800">Search Users</h1>
 
@@ -111,7 +172,6 @@ export default function SearchUser() {
                   {suggestions.map((user) => (
                     <div
                       key={user.id}
-                      onClick={() => goToUserProfile(user.id)}
                       className="p-3 border-b cursor-pointer hover:bg-gray-100"
                     >
                       <p>{user.author}</p>
@@ -147,6 +207,36 @@ export default function SearchUser() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Authors List */}
+        <div className="mt-10">
+          <h2 className="text-2xl font-bold mb-4 text-indigo-800">All Authors</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {authors.map((author, index) => (
+              <div
+                key={index}
+                className="bg-white shadow-md rounded-lg p-4 flex justify-between items-center"
+              >
+                <p className="text-lg font-semibold text-gray-800">{author}</p>
+                {followedAuthors.has(author) ? (
+                  <button
+                    className="px-4 py-2 bg-gray-400 text-white rounded-md cursor-default"
+                    disabled
+                  >
+                    Followed
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleFollow(author)}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200"
+                  >
+                    Follow
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </>

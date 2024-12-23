@@ -74,7 +74,7 @@ export default function Feed() {
     <RouteGuard>
       <>
         <Navbar />
-        <div className="p-6 bg-gradient-to-b from-blue-100 to-blue-300 min-h-screen">
+        <div className="p-2 bg-gradient-to-b from-blue-100 to-blue-300 min-h-screen">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Blog Feed</h1>
 
@@ -113,10 +113,11 @@ export default function Feed() {
                       </Link>
                     </div>
 
-                    <div className="flex justify-between px-6 py-4 bg-gray-100 text-sm text-gray-500 border-t">
-                      <span>Created by: {post.author}</span>
-                      <span>Posted on: {new Date(post.date).toLocaleDateString()}</span>
+                    <div className="flex items-center justify-between px-2 py-4 bg-gray-100 text-sm text-gray-500 border-t">
+                        <span className="flex-1 text-left">Created by: {post.author}</span>
+                        <span className="flex-1 text-right">Posted on: {new Date(post.date).toLocaleDateString()}</span>
                     </div>
+
                   </div>
                 ))}
               </>
