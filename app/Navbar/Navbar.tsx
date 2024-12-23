@@ -1,13 +1,35 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { AppBar, Toolbar, IconButton, Menu, MenuItem, Typography, Avatar, Button, Drawer, List, ListItem, ListItemText } from '@mui/material';
-import { Menu as MenuIcon } from '@mui/icons-material';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { auth, db } from '../../firebase';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { useState, useEffect } from "react";
+import {
+  AppBar,
+  Toolbar,
+  IconButton,
+  Menu,
+  MenuItem,
+  Typography,
+  Avatar,
+  Button,
+  Drawer,
+  List,
+  Divider,
+} from "@mui/material";
+import {
+  Menu as MenuIcon,
+  Home as HomeIcon,
+  Search as SearchIcon,
+  Create as CreateIcon,
+  Group as GroupIcon,
+  AdminPanelSettings as AdminIcon,
+  Logout as LogoutIcon,
+  AccountCircle as AccountIcon,
+} from "@mui/icons-material";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { auth, db } from "../../firebase";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { ListItem, ListItemButton, ListItemText } from "@mui/material";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import admin from "../../admin.json";
 
 export default function Navbar() {
@@ -23,13 +45,13 @@ export default function Navbar() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUser(user);
-        const q = query(collection(db, 'users'), where('email', '==', user.email));
+        const q = query(collection(db, "users"), where("email", "==", user.email));
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
           const userData = querySnapshot.docs[0].data();
-          setProfileImage(userData.image || '/avatar.png');
+          setProfileImage(userData.image || "/avatar.png");
         }
-        if (user.email && admin.email.includes(user.email)) {  // Added null check here
+        if (user.email && admin.email.includes(user.email)) {
           setAdminRights(true);
         }
       } else {
@@ -42,7 +64,7 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     await signOut(auth);
-    router.push('/');
+    router.push("/");
   };
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -58,34 +80,66 @@ export default function Navbar() {
   };
 
   return (
-    <AppBar position="static" color="default">
+    <AppBar
+      position="sticky"
+      sx={{
+        background: "linear-gradient(90deg, #6a11cb 0%, #2575fc 100%)",
+        color: "#fff",
+      }}
+      elevation={4}
+    >
       <Toolbar>
-        <IconButton edge="start" color="inherit" onClick={() => toggleDrawer(true)} sx={{ display: { md: 'none' } }}>
+        {/* Mobile Drawer Toggle */}
+        <IconButton
+          edge="start"
+          color="inherit"
+          onClick={() => toggleDrawer(true)}
+          sx={{ display: { md: "none" } }}
+        >
           <MenuIcon />
         </IconButton>
-        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+        <Typography
+          variant="h5"
+          sx={{
+            flexGrow: 1,
+            fontFamily: "Poppins, sans-serif",
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+          onClick={() => router.push("/Feed")}
+        >
           UniFy
         </Typography>
-        
+
+        {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-4">
           <Link href="/Feed" passHref>
-            <Button color="inherit">Feed</Button>
+            <Button color="inherit" startIcon={<HomeIcon />} sx={{ fontWeight: "bold" }}>
+              Feed
+            </Button>
           </Link>
           <Link href="/SearchUser" passHref>
-            <Button color="inherit">Search Users</Button>
+            <Button color="inherit" startIcon={<SearchIcon />} sx={{ fontWeight: "bold" }}>
+              Search Users
+            </Button>
           </Link>
           <Link href="/CreatePost" passHref>
-            <Button color="inherit">Create Post</Button>
+            <Button color="inherit" startIcon={<CreateIcon />} sx={{ fontWeight: "bold" }}>
+              Create Post
+            </Button>
           </Link>
           <Link href="/Follow" passHref>
-            <Button color="inherit">Follow</Button>
+            <Button color="inherit" startIcon={<GroupIcon />} sx={{ fontWeight: "bold" }}>
+              Follow
+            </Button>
           </Link>
         </div>
 
+        {/* User Section */}
         {user ? (
           <>
             <IconButton onClick={handleMenuOpen} color="inherit">
-              <Avatar src={profileImage || '/avatar.png'} />
+              <Avatar src={profileImage || "/avatar.png"} />
             </IconButton>
             <Menu
               anchorEl={dropdownAnchor}
@@ -93,76 +147,99 @@ export default function Navbar() {
               onClose={handleMenuClose}
             >
               <Link href="/Profiles" passHref>
-                <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
+                <MenuItem onClick={handleMenuClose}>
+                  <AccountIcon sx={{ marginRight: 1 }} />
+                  Profile
+                </MenuItem>
               </Link>
               {adminRights && (
                 <Link href="/Admin" passHref>
-                  <MenuItem onClick={handleMenuClose}>Admin</MenuItem>
+                  <MenuItem onClick={handleMenuClose}>
+                    <AdminIcon sx={{ marginRight: 1 }} />
+                    Admin
+                  </MenuItem>
                 </Link>
               )}
-              <MenuItem onClick={handleLogout}>Logout</MenuItem>
+              <MenuItem onClick={handleLogout}>
+                <LogoutIcon sx={{ marginRight: 1 }} />
+                Logout
+              </MenuItem>
             </Menu>
           </>
         ) : (
           <Link href="/Auth" passHref>
-            <Button color="inherit">Login</Button>
+            <Button color="inherit" sx={{ fontWeight: "bold" }}>
+              Login
+            </Button>
           </Link>
         )}
       </Toolbar>
 
       {/* Mobile Drawer */}
-      <Drawer anchor="left" open={drawerOpen} onClose={() => toggleDrawer(false)}>
-        <List sx={{ width: 250 }}>
-          <ListItem  onClick={() => toggleDrawer(false)}>
-            <ListItemText primary="UniFy" />
-          </ListItem>
-          <Link href="/Feed" passHref>
-            <ListItem  onClick={() => toggleDrawer(false)}>
-              <ListItemText primary="Feed" />
+              <Drawer anchor="left" open={drawerOpen} onClose={() => toggleDrawer(false)}>
+          <List sx={{ width: 250 }}>
+            <ListItem>
+              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                UniFy
+              </Typography>
             </ListItem>
-          </Link>
-          <Link href="/SearchUser" passHref>
-            <ListItem  onClick={() => toggleDrawer(false)}>
-              <ListItemText primary="Search Users" />
-            </ListItem>
-          </Link>
-          <Link href="/CreatePost" passHref>
-            <ListItem  onClick={() => toggleDrawer(false)}>
-              <ListItemText primary="Create Post" />
-            </ListItem>
-          </Link>
-          <Link href="/Follow" passHref>
-            <ListItem  onClick={() => toggleDrawer(false)}>
-              <ListItemText primary="Follow" />
-            </ListItem>
-          </Link>
-          {user && (
-            <Link href="/Profiles" passHref>
-              <ListItem  onClick={() => toggleDrawer(false)}>
-                <ListItemText primary="Profile" />
-              </ListItem>
+            <Divider />
+            <Link href="/Feed" passHref>
+              <ListItemButton component="a" onClick={() => toggleDrawer(false)}>
+                <HomeIcon sx={{ marginRight: 5 }} />
+                <ListItemText primary="Feed" />
+              </ListItemButton>
             </Link>
-          )}
-          {adminRights && (
-            <Link href="/Admin" passHref>
-              <ListItem  onClick={() => toggleDrawer(false)}>
-                <ListItemText primary="Admin" />
-              </ListItem>
+            <Link href="/SearchUser" passHref>
+              <ListItemButton component="a" onClick={() => toggleDrawer(false)}>
+                <SearchIcon sx={{ marginRight: 5 }} />
+                <ListItemText primary="Search Users" />
+              </ListItemButton>
             </Link>
-          )}
-          {user ? (
-            <ListItem  onClick={() => { handleLogout(); toggleDrawer(false); }}>
-              <ListItemText primary="Logout" />
-            </ListItem>
-          ) : (
-            <Link href="/Auth" passHref>
-              <ListItem  onClick={() => toggleDrawer(false)}>
-                <ListItemText primary="Login" />
-              </ListItem>
+            <Link href="/CreatePost" passHref>
+              <ListItemButton component="a" onClick={() => toggleDrawer(false)}>
+                <CreateIcon sx={{ marginRight: 5 }} />
+                <ListItemText primary="Create Post" />
+              </ListItemButton>
             </Link>
-          )}
-        </List>
-      </Drawer>
+            <Link href="/Follow" passHref>
+              <ListItemButton component="a" onClick={() => toggleDrawer(false)}>
+                <GroupIcon sx={{ marginRight: 5 }} />
+                <ListItemText primary="Follow" />
+              </ListItemButton>
+            </Link>
+            {user && (
+              <Link href="/Profiles" passHref>
+                <ListItemButton component="a" onClick={() => toggleDrawer(false)}>
+                  <AccountIcon sx={{ marginRight: 5 }} />
+                  <ListItemText primary="Profile" />
+                </ListItemButton>
+              </Link>
+            )}
+            {adminRights && (
+              <Link href="/Admin" passHref>
+                <ListItemButton component="a" onClick={() => toggleDrawer(false)}>
+                  <AdminIcon sx={{ marginRight: 5 }} />
+                  <ListItemText primary="Admin" />
+                </ListItemButton>
+              </Link>
+            )}
+            {user ? (
+              <ListItemButton onClick={() => { handleLogout(); toggleDrawer(false); }}>
+                <LogoutIcon sx={{ marginRight: 5 }} />
+                <ListItemText primary="Logout" />
+              </ListItemButton>
+            ) : (
+              <Link href="/Auth" passHref>
+                <ListItemButton component="a" onClick={() => toggleDrawer(false)}>
+                  <AccountIcon sx={{ marginRight: 5 }} />
+                  <ListItemText primary="Login" />
+                </ListItemButton>
+              </Link>
+            )}
+          </List>
+</Drawer>
+
     </AppBar>
   );
 }

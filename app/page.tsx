@@ -18,37 +18,40 @@ const HomePage: FC = () => {
     <div className="bg-gray-50">
       {/* Hero Section */}
       <section
-        className="relative text-white  py-32 md:py-40 lg:py-48"
-        style={{
-          backgroundImage: 'url(/bg.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          height: '100vh',
-        }}
-      >
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent"></div>
+  className="relative text-white py-52 md:py-40 lg:py-48"
+  style={{
+    backgroundImage: 'url(/bg.jpg)',
+    backgroundRepeat:'no-repeat',
+    backgroundSize:'cover',
+    height:'600px'
+  }}
+>
+  {/* Gradient Overlay */}
+  <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent"></div>
 
-        {/* Hero Content */}
-        <div className="container mx-auto px-6 relative z-10 text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 sm:mb-8 text-white">
-            Welcome to <span className="text-blue-300">UniFy</span>
-          </h1>
-          <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 max-w-3xl mx-auto text-gray-100 leading-relaxed">
-            A simple platform for you to express your ideas, share your creativity, and engage with the world.
-          </p>
+  {/* Hero Content */}
+  <div className="container mx-auto px-6 relative z-10 text-center">
+    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 sm:mb-8 text-white">
+      Welcome to <span className="text-pink-400">UniFy</span>
+    </h1>
+    <p className="text-md sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 max-w-3xl mx-auto text-gray-100 leading-relaxed">
+      A simple platform for you to express your ideas, share your creativity, and engage with the world.
+    </p>
 
-          {/* Smooth scroll button: Changes here */}
-          <a
-            href="#features"
-            onClick={(e) => handleSmoothScroll(e, "#features")} // Added smooth scroll functionality
-            className="bg-blue-600 text-white py-3 px-6 sm:px-8 rounded-full text-lg sm:text-xl font-semibold transition-all transform hover:scale-105 hover:bg-blue-500 duration-200"
-          >
-            Discover Features
-          </a>
-        </div>
-      </section>
+   
+    <a
+      href="#features"
+      onClick={(e) => handleSmoothScroll(e, "#features")}
+      className="bg-pink-600 text-white py-3 px-6 sm:px-8 rounded-full text-lg sm:text-xl font-semibold transition-all transform hover:scale-105 hover:bg-pink-500 duration-200"
+    >
+      Discover Features
+    </a>
+  </div>
+
+  {/* Tailwind background image settings */}
+  <div className="absolute inset-0 bg-cover bg-center bg-no-repeat sm:bg-[length:120%_auto] md:bg-[length:110%_auto] lg:bg-[length:100%_auto]"></div>
+</section>
+
 
       {/* Features Section */}
       <section id="features" className="py-20 text-center bg-white">
@@ -63,7 +66,7 @@ const HomePage: FC = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <FaPencilAlt className="text-blue-600 text-5xl mb-4 sm:mb-6 transition transform hover:rotate-12" />
+              <FaPencilAlt className="text-pink-600 text-5xl mb-4 sm:mb-6 transition transform hover:rotate-12" />
               <h3 className="text-lg sm:text-xl font-semibold text-gray-800">Easy Post Creation</h3>
               <p className="text-gray-600 mt-2">
                 Write, edit, and publish your posts effortlessly with an intuitive editor.
@@ -78,7 +81,7 @@ const HomePage: FC = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <FaUsers className="text-blue-600 text-5xl mb-4 sm:mb-6 transition transform hover:rotate-12" />
+              <FaUsers className="text-pink-600 text-5xl mb-4 sm:mb-6 transition transform hover:rotate-12" />
               <h3 className="text-lg sm:text-xl font-semibold text-gray-800">Engage with Readers</h3>
               <p className="text-gray-600 mt-2">
                 Connect with readers through comments, feedback, and social media sharing.
@@ -93,7 +96,7 @@ const HomePage: FC = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.4 }}
             >
-              <FaRocket className="text-blue-600 text-5xl mb-4 sm:mb-6 transition transform hover:rotate-12" />
+              <FaRocket className="text-pink-600 text-5xl mb-4 sm:mb-6 transition transform hover:rotate-12" />
               <h3 className="text-lg sm:text-xl font-semibold text-gray-800">Expand Your Reach</h3>
               <p className="text-gray-600 mt-2">
                 Share your posts on social media to increase visibility and grow your audience.
@@ -104,7 +107,7 @@ const HomePage: FC = () => {
       </section>
 
       {/* Call-to-Action Section */}
-      <section className="bg-blue-800 text-white py-20 text-center">
+      <section className="bg-pink-800 text-white py-20 text-center">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-semibold mb-4">Start Your Blogging Journey</h2>
           <p className="text-lg mb-6 max-w-2xl mx-auto">
@@ -112,7 +115,7 @@ const HomePage: FC = () => {
           </p>
           <a
             href="/Auth"
-            className="bg-white text-blue-800 py-3 px-8 rounded-full text-xl font-semibold transition transform hover:scale-105 hover:bg-gray-100 duration-200"
+            className="bg-white text-pink-800 py-3 px-8 rounded-full text-xl font-semibold transition transform hover:scale-105 hover:bg-gray-100 duration-200"
           >
             Get Started
           </a>

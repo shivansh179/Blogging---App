@@ -13,9 +13,12 @@ import {
   query,
   where,
   getDocs,
+  setDoc,
 } from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "../Navbar/Navbar";
 import { FaHeart, FaComment, FaShareAlt } from "react-icons/fa";
+import Link from "next/link";
 
 export default function PostDetail() {
   const { id } = useParams();
@@ -27,7 +30,21 @@ export default function PostDetail() {
   const [showComments, setShowComments] = useState<boolean>(false);
   const [followersCount, setFollowersCount] = useState<number>(0); // Follower count
   const [followingCount, setFollowingCount] = useState<number>(0); // Following count
-  const currentUserEmail = "user@example.com"; // Replace with authenticated user's email.
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null); // Logged-in user email
+
+  useEffect(() => {
+    // Get authenticated user's email
+    const auth = getAuth();
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (user?.email) {
+        setCurrentUserEmail(user.email);
+      } else {
+        setCurrentUserEmail(null);
+      }
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
 
   useEffect(() => {
     // Fetch all user data for mapping
@@ -44,33 +61,15 @@ export default function PostDetail() {
         try {
           const docRef = doc(db, "posts", id as string);
           const docSnap = await getDoc(docRef);
-  
+
           if (docSnap.exists()) {
             const postData = docSnap.data();
             setPost({ id: docSnap.id, ...postData });
             setLikes(postData.likes || []);
             setComments(postData.comments || []);
-  
-            // Fetch the author's name using email
-            const userQuery = query(
-              collection(db, "users"),
-              where("email", "==", postData.email)
-            );
-            const userSnapshot = await getDocs(userQuery);
-            const loggedInUserName =
-              userSnapshot.docs[0]?.data()?.name || "Anonymous";
-  
-            // Fetch Follower Count by Author Name
-            const followersSnapshot = await getDocs(
-              query(collection(db, "follow"), where("author", "==", loggedInUserName))
-            );
-            setFollowersCount(followersSnapshot.size);
-  
-            // Fetch Following Count by Author Name
-            const followingSnapshot = await getDocs(
-              query(collection(db, "follow"), where("followedBy", "==", postData.email))
-            );
-            setFollowingCount(followingSnapshot.size);
+
+            // Calculate and store followers and following
+            await calculateAndStoreFollowersAndFollowing(postData.email);
           } else {
             console.error("Post not found in Firestore.");
           }
@@ -78,13 +77,55 @@ export default function PostDetail() {
           console.error("Error fetching post and counts:", error);
         }
       };
-  
+
       fetchPostAndCounts();
     }
   }, [id]);
-  
+
+  const calculateAndStoreFollowersAndFollowing = async (email: string) => {
+    try {
+      // Check if the data already exists in the collection
+      const statsRef = doc(db, "userStats", email);
+      const statsSnap = await getDoc(statsRef);
+
+      if (statsSnap.exists()) {
+        console.log("Data already exists for this user. Skipping calculation.");
+        const statsData = statsSnap.data();
+        setFollowersCount(statsData.followerCount || 0);
+        setFollowingCount(statsData.followingCount || 0);
+        return;
+      }
+
+      // If not, calculate followers and following
+      const followersSnapshot = await getDocs(
+        query(collection(db, "follow"), where("author", "==", email))
+      );
+
+      const followingSnapshot = await getDocs(
+        query(collection(db, "follow"), where("followedBy", "==", email))
+      );
+
+      const followers = followersSnapshot.docs.map((doc) => doc.data().followedBy);
+      const following = followingSnapshot.docs.map((doc) => doc.data().author);
+
+      // Save the data in Firestore
+      await setDoc(statsRef, {
+        email: email,
+        followers: followers,
+        following: following,
+        followerCount: followers.length,
+        followingCount: following.length,
+      });
+
+      setFollowersCount(followers.length);
+      setFollowingCount(following.length);
+    } catch (error) {
+      console.error("Error calculating followers and following:", error);
+    }
+  };
+
   const handleLike = async () => {
-    if (!post) return;
+    if (!post || !currentUserEmail) return;
 
     const postRef = doc(db, "posts", id as string);
     const alreadyLiked = likes.includes(currentUserEmail);
@@ -100,7 +141,7 @@ export default function PostDetail() {
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!comment.trim()) return;
+    if (!comment.trim() || !currentUserEmail) return;
 
     const postRef = doc(db, "posts", id as string);
     const newComment = { text: comment, email: currentUserEmail };
@@ -141,14 +182,15 @@ export default function PostDetail() {
           {/* Post Header */}
           <div className="flex items-center p-6 bg-indigo-50">
             <img
-              src={getUserAvatar(post.email)} // Fetch author's avatar
+              src={getUserAvatar(post.email)}
               alt="Author Avatar"
               className="h-12 w-12 rounded-full object-cover border-2 border-indigo-400"
             />
             <div className="ml-4">
-              <h2 className="text-xl font-semibold text-indigo-700">{getUserName(post.email)}</h2>
+              <Link href={`/authorPage/${post.email}`}>
+                <h2 className="text-xl font-semibold text-indigo-700">{getUserName(post.email)}</h2>
+              </Link>
               <p className="text-sm text-gray-500">{new Date(post.date).toLocaleDateString()}</p>
-              {/* Follower and Following Counts */}
               <div className="mt-2 flex space-x-4 text-gray-600">
                 <div>
                   <span className="font-semibold">{followersCount}</span> Followers
@@ -169,17 +211,11 @@ export default function PostDetail() {
             />
           </div>
 
-          {/* Post Footer */}
-          <div className="flex justify-between px-6 py-4 bg-gray-100 text-sm text-gray-500 border-t">
-            <span>Created by: {getUserName(post.email)}</span>
-            <span>Posted on: {new Date(post.date).toLocaleDateString()}</span>
-          </div>
-
           {/* Like, Comment, Share Buttons */}
           <div className="flex justify-around items-center px-6 py-4 bg-gray-50 border-t">
             <button
               className={`flex items-center space-x-2 ${
-                likes.includes(currentUserEmail)
+                likes.includes(currentUserEmail ?? "")
                   ? "text-red-500"
                   : "text-gray-700 hover:text-red-500"
               } transition-colors`}
@@ -221,7 +257,7 @@ export default function PostDetail() {
                         {getUserName(comment.email)}
                       </span>
                     </div>
-                    <p className="text-gray-600">{comment.text}</p>
+                    <p className="text-gray-600 ml-10">{comment.text}</p>
                   </li>
                 ))}
               </ul>
