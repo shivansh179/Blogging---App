@@ -226,7 +226,7 @@ export default function PostDetail() {
             >
               <FaHeart className="h-6 w-6" />
               <span className="hidden md:block">{likes.length} Likes</span>
-              <span>{likes.length}</span>
+              <span className="block md:hidden">{likes.length}</span>
             </button>
             <button
               className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors"
@@ -234,7 +234,7 @@ export default function PostDetail() {
             >
               <FaComment className="h-6 w-6" />
               <span className="hidden md:block">{comments.length} Comments</span>
-              <span>{comments.length}</span>
+              <span className="block md:hidden">{comments.length}</span>
             </button>
             <button
               className="flex items-center space-x-2 text-blue-500 hover:text-blue-600 transition-colors"

@@ -23,6 +23,10 @@ export default function Profile() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+
+     console.log('====================================');
+     console.log(user);
+     console.log('====================================');
       if (user) {
         setUser(user);
         setName(user.displayName || "");
@@ -31,11 +35,15 @@ export default function Profile() {
         const q = query(collection(db, "users"), where("email", "==", user.email));
         const querySnapshot = await getDocs(q);
 
+        
+
         if (!querySnapshot.empty) {
           const userData = querySnapshot.docs[0].data();
           setUserImage(userData.image || null);
           setName(userData.name || "");
         }
+
+        
 
 // <<<<<<< HEAD
         const loggedInUserName = querySnapshot.docs[0]?.data()?.author || user.displayName;
@@ -97,6 +105,8 @@ export default function Profile() {
         );
 
         imageUrl = response.data.secure_url;
+
+        console.log(imageUrl);
       }
 
       const userDocRef = doc(db, "users", user.email || "");
