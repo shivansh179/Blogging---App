@@ -22,11 +22,12 @@ export default function Profile() {
   const router = useRouter();
 
   useEffect(() => {
+
+     
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
 
-     console.log('====================================');
-     console.log(user);
-     console.log('====================================');
+     
+     
       if (user) {
         setUser(user);
         setName(user.displayName || "");
@@ -46,8 +47,10 @@ export default function Profile() {
         
 
 // <<<<<<< HEAD
-        const loggedInUserName = querySnapshot.docs[0]?.data()?.author || user.displayName;
-
+        const loggedInUserName = querySnapshot.docs[0]?.data()?.name || user.displayName;
+        
+      console.log(querySnapshot.docs[0]?.data()?.name);
+      
         // Fetch user posts 
         const postsRef = collection(db, "posts");
         const postsQuery = query(postsRef, where("author", "==", loggedInUserName));
@@ -208,17 +211,21 @@ export default function Profile() {
 
       {/* User's Posts Grid */}
       <div className="mt-8 max-w-4xl mx-auto">
-        <h2 className="text-xl font-semibold mb-4">Your Posts</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {userPosts.map((post) => (
-            <Link key={post.id} href={`/${post.id}`}>
-              <div className="block p-6 bg-white shadow rounded-lg hover:shadow-lg transition">
-                <h3 className="text-lg font-semibold text-gray-800">{post.title}</h3>
-               </div>
-            </Link>
-          ))}
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    {userPosts.length === 0 ? (
+      <div className="text-center text-gray-500">No posts found.</div>
+    ) : (
+      <h2 className="text-xl font-semibold mb-4">Your Posts</h2>
+    )}
+    {userPosts.map((post) => (
+      <Link key={post.id} href={`/${post.id}`}>
+        <div className="block p-6 bg-white shadow rounded-lg hover:shadow-lg transition">
+          <h3 className="text-lg font-semibold text-gray-800">{post.title}</h3>
         </div>
-      </div>
+      </Link>
+    ))}
+  </div>
+    </div>
     </div>
   );
 }

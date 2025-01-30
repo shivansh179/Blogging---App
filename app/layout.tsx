@@ -6,7 +6,7 @@ import type { Metadata } from "next";
  
 
 export const metadata: Metadata = {
-  title: "Unify Blog App",
+  title: "Unify",
   description: "Created by Prashansa and Shivansh",
    icons: {
     icon: '/blog.jpg', // Path to your favicon

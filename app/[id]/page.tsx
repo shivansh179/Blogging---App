@@ -177,7 +177,7 @@ export default function PostDetail() {
   }
 
   return (
-    <RouteGuard>
+    // <RouteGuard>
       <>
       <Navbar />
       <div className="p-2 bg-gradient-to-r from-indigo-100 to-blue-100 min-h-screen">
@@ -287,6 +287,6 @@ export default function PostDetail() {
         </div>
       </div>
     </>
-      </RouteGuard>
+      // </RouteGuard>
   );
 }
